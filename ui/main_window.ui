@@ -16,9 +16,9 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QPushButton" name="b_select_folder">
+     <widget class="QPushButton" name="b_select_file">
       <property name="text">
-       <string>Select folder</string>
+       <string>Open file</string>
       </property>
      </widget>
     </item>
@@ -31,7 +31,7 @@
        </size>
       </property>
       <property name="text">
-       <string>TextLabel</string>
+       <string/>
       </property>
      </widget>
     </item>
@@ -102,54 +102,10 @@
            <enum>QFrame::Raised</enum>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Maximum potential</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Degree of freedoms:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QSpinBox" name="p_sb_deg_freedom"/>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="p_cb_cmb_model"/>
-           </item>
-           <item row="2" column="0" colspan="4">
-            <widget class="QWidget" name="p_wc_deg_freedom" native="true">
-             <property name="minimumSize">
-              <size>
-               <width>330</width>
-               <height>0</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Select model:</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="2">
             <widget class="QLabel" name="label_6">
              <property name="text">
               <string>eV</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0" colspan="4">
-            <widget class="QPushButton" name="p_but_start_pot_fit">
-             <property name="text">
-              <string>Start fit</string>
              </property>
             </widget>
            </item>
@@ -180,21 +136,102 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Select model:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="4">
+            <widget class="QWidget" name="p_wc_deg_freedom" native="true">
+             <property name="minimumSize">
+              <size>
+               <width>330</width>
+               <height>0</height>
+              </size>
+             </property>
+             <zorder>p_lb_fit_status</zorder>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Degree of freedoms:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QSpinBox" name="p_sb_deg_freedom"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Maximum potential</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="p_cb_cmb_model"/>
+           </item>
+           <item row="3" column="2" colspan="2">
+            <widget class="QPushButton" name="p_but_stop_pot_fit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Stop fit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="2">
+            <widget class="QPushButton" name="p_but_start_pot_fit">
+             <property name="text">
+              <string>Start fit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="4">
+            <widget class="QLabel" name="p_lb_fit_status">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>20</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>17</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Cycle:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="4">
             <widget class="QPushButton" name="p_but_prepare_fit_set">
              <property name="text">
               <string>Prepare fit set</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="2" colspan="2">
-            <widget class="QPushButton" name="p_but_load_fit_res">
-             <property name="text">
-              <string>Load fit results</string>
-             </property>
-            </widget>
-           </item>
           </layout>
+          <zorder>p_wc_deg_freedom</zorder>
+          <zorder>label_2</zorder>
+          <zorder>p_cb_cmb_model</zorder>
+          <zorder>p_sb_deg_freedom</zorder>
+          <zorder>label_5</zorder>
+          <zorder>label_3</zorder>
+          <zorder>label_6</zorder>
+          <zorder>p_sb_max_potential</zorder>
+          <zorder>p_but_start_pot_fit</zorder>
+          <zorder>p_srb_cycle</zorder>
+          <zorder>p_lb_fit_cycle</zorder>
+          <zorder>p_but_prepare_fit_set</zorder>
+          <zorder>p_but_stop_pot_fit</zorder>
+          <zorder>p_lb_fit_status</zorder>
          </widget>
         </item>
         <item row="0" column="2">

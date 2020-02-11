@@ -38,6 +38,13 @@ if __name__ == "__main__":
     src_dir = code_dir + '/widgets'
     uis_dir = code_dir + "/ui"
 
+    print("Making widgets folder...")
+
+    if not os.path.isdir('./widgets'):
+        os.mkdir('./widgets')
+        f = open('./widgets/__init__.py', 'tw', encoding='utf-8')
+        f.close()
+
     print("Removing pyc files...")
 
     for root, dirs, files in os.walk(src_dir):

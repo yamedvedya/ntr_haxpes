@@ -68,6 +68,19 @@ class TopBottomPotential(QtWidgets.QWidget):
         self.widget_edited.emit()
         self.blockSignals(False)
 
+    # ----------------------------------------------------------------------
+    def set_values(self, values):
+
+        self.blockSignals(True)
+
+        self._ui.sb_top_potential.setValue(values[0])
+        self._ui.sl_top_potential.setValue(int(50*(1 + values[0]/self.max_voltage)))
+
+        self._ui.sb_bottom_potential.setValue(values[1])
+        self._ui.sl_bottom_potential.setValue(int(50*(1 + values[1]/self.max_voltage)))
+
+        self.blockSignals(False)
+
 # ----------------------------------------------------------------------
 class BreakingPoint(QtWidgets.QWidget):
 
@@ -82,7 +95,7 @@ class BreakingPoint(QtWidgets.QWidget):
         self._ui.l_point_name.setText('Point {}'.format(point_num))
 
         self.max_position = max_depth*1e9 - 0.01
-        self.max_potential = max_voltage - 0.01
+        self.max_voltage = max_voltage - 0.01
         self._ui.sb_point_position.setValue(point_pos*1e9)
         self._ui.sl_point_position.setValue(1e2*point_pos/max_depth)
 
@@ -121,7 +134,7 @@ class BreakingPoint(QtWidgets.QWidget):
         if mode == 'position':
             self._ui.sb_point_position.setValue(max([0.01, self.max_position*(float(self._ui.sl_point_position.value()/100))]))
         else:
-            self._ui.sb_point_potential.setValue(self.max_potential*(float(self._ui.sl_point_potential.value()/50)-1))
+            self._ui.sb_point_potential.setValue(self.max_voltage * (float(self._ui.sl_point_potential.value() / 50) - 1))
         self.widget_edited.emit()
         self.blockSignals(False)
 
@@ -133,6 +146,19 @@ class BreakingPoint(QtWidgets.QWidget):
                                                            self.max_position))
         else:
             self._ui.sl_point_potential.setValue(int(50 * (1 + float(self._ui.sb_point_potential.value()) /
-                                                           self.max_potential)))
+                                                           self.max_voltage)))
         self.widget_edited.emit()
+        self.blockSignals(False)
+
+    # ----------------------------------------------------------------------
+    def set_values(self, values):
+
+        self.blockSignals(True)
+
+        self._ui.sb_point_position.setValue(values[0]*1e9)
+        self._ui.sl_point_position.setValue(int(100 * values[0] * 1e9 / self.max_position))
+
+        self._ui.sb_point_potential.setValue(values[1])
+        self._ui.sl_point_potential.setValue(int(50 * (1 + values[1] / self.max_voltage)))
+
         self.blockSignals(False)

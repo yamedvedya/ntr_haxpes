@@ -16,8 +16,8 @@ class Settings_Window(QtWidgets.QMainWindow):
         ('T', 'sp_t_value', 'sb_dbl'),
         ('KSI_TOLLERANCE', 'sb_fit_tolerance', 'sb_dbl'),
         ('FIT_METHOD', 'cb_fit_method', 'cb'),
-        ('V_MESH', 'sp_v_mesh', 'sb_dbl'),
-        ('D_MESH', 'sp_d_mesh', 'sb_dbl'),
+        ('V_MESH', 'sp_v_mesh', 'sb_int'),
+        ('D_MESH', 'sp_d_mesh', 'sb_int'),
         ('V_STEP', 'sp_v_step', 'sb_dbl'),
         ('D_STEP', 'sp_d_step', 'sb_dbl'),
 

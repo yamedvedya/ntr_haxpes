@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets, QtCore
 import numpy as np
+from propagatingThread import ExcThread
 import pyqtgraph as pg
 from widgets.main_window_ui import Ui_MainWindow
 from settings_dialog import Settings_Window
@@ -10,6 +10,9 @@ from potential_widgets import *
 import look_and_feel as lookandfeel
 import default_settings as default_settings
 import os
+
+from queue import Queue
+from queue import Empty as emptyQueue
 
 # ----------------------------------------------------------------------
 class NTR_Window(QtWidgets.QMainWindow):
@@ -25,6 +28,8 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._ui = Ui_MainWindow()
         self._ui.setupUi(self)
 
+        self._local_error_queue = Queue()
+
         self._ui.tab_intensity.setEnabled(False)
         self._ui.tab_potential.setEnabled(False)
 
@@ -34,7 +39,7 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._pot_model_grid = QtWidgets.QGridLayout(self._ui.p_wc_deg_freedom)
 
         self._fill_combos()
-        self.fitter = NTR_fitter()
+        self.fitter = NTR_fitter(self)
         self.fitter.set_basic_settings(self.settings)
         self.fitter.STAND_ALONE_MODE = False
         self.settings_window.fill_methods(self.fitter.METHODS)
@@ -44,8 +49,59 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._connect_actions()
         self._make_default_graphics()
 
+        self._refresh_status_timer = QtCore.QTimer(self)
+        self._refresh_status_timer.timeout.connect(self._refresh_status)
+        self._refresh_status_timer.start(500)
+
+    # ----------------------------------------------------------------------
+    def _connect_actions(self):
+
+        self._ui.b_select_file.clicked.connect(self._load_file_clicked)
+        self._ui.p_cb_cmb_model.currentIndexChanged.connect(self._potential_model_selected)
+        self._ui.p_sb_deg_freedom.valueChanged.connect(self._change_degrees)
+
+        self._ui.p_but_start_pot_fit.clicked.connect(self._start_pot_fit)
+        self._ui.p_but_stop_pot_fit.clicked.connect(self._stop_pot_fit)
+        self._ui.p_but_prepare_fit_set.clicked.connect(self._prepare_fit_set)
+
+        self._ui.but_settings_potential.clicked.connect(self._show_settings)
+        self._ui.cb_experimental_set.currentIndexChanged.connect(self._new_set_selected)
+
+        self.settings_window.settings_changed.connect(self._settings_changed)
+        self._ui.p_sb_max_potential.valueChanged.connect(self._change_v_range)
+
+        self._ui.p_srb_cycle.valueChanged.connect(self._display_cycle)
+
+    # ----------------------------------------------------------------------
+    def _block_signals(self, flag):
+
+        self._ui.b_select_file.blockSignals(flag)
+        self._ui.p_cb_cmb_model.blockSignals(flag)
+        self._ui.p_sb_deg_freedom.blockSignals(flag)
+        self._ui.cb_experimental_set.blockSignals(flag)
+        self._ui.p_srb_cycle.blockSignals(flag)
+
+    # ----------------------------------------------------------------------
+    def _refresh_status(self):
+
+        try:
+            error = self._local_error_queue.get(block=False)
+        except emptyQueue:
+            return
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Critical)
+            msg.setText("Error")
+            trace = error[2]
+            while trace.tb_next:
+                trace = trace.tb_next
+                trbck_msg = trace.tb_frame
+            msg.setInformativeText(error[1].args[0] + str(trbck_msg))
+            msg.setWindowTitle("Error")
+            msg.exec_()
     # ----------------------------------------------------------------------
     def _set_default_settings(self):
+
         all_settings = [arg for arg in dir(default_settings) if not arg.startswith('_')]
         for setting in all_settings:
             self.settings[setting] = getattr(default_settings, setting)
@@ -114,34 +170,14 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.fit_pot_widget.setCentralItem(self.fit_pot_graphs_layout)
 
     # ----------------------------------------------------------------------
-    def _connect_actions(self):
-
-        self._ui.b_select_folder.clicked.connect(self._folder_change_clicked)
-        self._ui.p_cb_cmb_model.currentIndexChanged.connect(self._potential_model_selected)
-        self._ui.p_sb_deg_freedom.valueChanged.connect(self._change_degrees)
-        self._ui.p_but_start_pot_fit.clicked.connect(self._start_pot_fit)
-        self._ui.p_but_prepare_fit_set.clicked.connect(self._prepare_fit_set)
-
-        self._ui.but_settings_potential.clicked.connect(self._show_settings)
-        self._ui.cb_experimental_set.currentIndexChanged.connect(self._new_set_selected)
-
-        self.settings_window.settings_changed.connect(self._settings_changed)
-        self._ui.p_sb_max_potential.valueChanged.connect(self._change_v_range)
-
-    # ----------------------------------------------------------------------
-    def _block_signals(self, flag):
-        self._ui.b_select_folder.blockSignals(flag)
-        self._ui.p_cb_cmb_model.blockSignals(flag)
-        self._ui.p_sb_deg_freedom.blockSignals(flag)
-        self._ui.cb_experimental_set.blockSignals(flag)
-
-    # ----------------------------------------------------------------------
     def _show_settings(self):
+
         self.settings_window.set_options(self.settings)
         self.settings_window.show()
 
     # ----------------------------------------------------------------------
     def _settings_changed(self, settings):
+
         for key, value in settings.items():
             self.settings[key] = value
 
@@ -150,63 +186,64 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _change_v_range(self):
+
         self.settings['VOLT_MAX'] = self._ui.p_sb_max_potential.value()
         self.fitter.set_basic_settings(self.settings)
 
     # ----------------------------------------------------------------------
     def _fill_combos(self):
+
         self.list_of_models = get_model_list()
         for model in self.list_of_models:
             self._ui.p_cb_cmb_model.addItem(model['name'])
 
     # ----------------------------------------------------------------------
-    def _prepare_fit_set(self):
-        new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Select Directory", self._working_dir, '.set')
-        if new_file:
-            self.fitter.prepare_fit_set("".join(new_file))
-    # ----------------------------------------------------------------------
-    def _folder_change_clicked(self):
+    def _load_file_clicked(self):
+
         self._block_signals(True)
-        new_folder = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory", self._working_dir))
-        if new_folder:
-            file_list = [f for f in os.listdir(new_folder) if os.path.isfile(os.path.join(new_folder, f))
-                                                   and os.path.splitext(f)[-1] == ".mat"]
-            if len(file_list) > 1:
-                selectItems = []
-                msg = ''
-                for item in file_list:
-                    selectItems.append('{}'.format(item))
-                    msg += item + '\n'
-                item, ok = QtWidgets.QInputDialog.getItem(self, "Select desired file",
-                                                      "Several data files found:\n\n" + msg + "\nselect desired:",
-                                                      selectItems, 0, False)
-                ind = selectItems.index(item)
-                if ok:
-                    file_name = os.path.splitext(file_list[ind])[0]
-                else:
-                    return
-            else:
-                file_name = os.path.splitext(file_list[0])[0]
+        new_file = QtWidgets.QFileDialog.getOpenFileName(self, "Open file", self._working_dir, 'Data set (*.mat);; Fit results (*.res);; Fit set (*.fset)')
+        if new_file[0]:
 
-            self._working_dir = new_folder
-            self._working_file = os.path.join(new_folder, file_name + '.mat')
-            self._ui.l_folder.setText(self._working_file)
-            self._get_data_sets()
-            self.fitter.set_new_data_file(self._working_file, self._working_set)
-            self._ui.tab_intensity.setEnabled(True)
+            self._working_dir = os.path.split(new_file[0])[0]
+            self._working_file = new_file[0]
+            self._ui.l_folder.setText(new_file[0])
 
-            file_list = [f for f in os.listdir(new_folder) if os.path.isfile(os.path.join(new_folder, f))
-                                                   and os.path.splitext(f)[-1] == ".sw"]
-
-            for file in file_list:
-                if os.path.splitext(file)[0] == file_name:
-                    self.fitter.set_new_sw_file(os.path.join(new_folder, file))
+            if '.res' in new_file[1]:
+                self._ui.cb_experimental_set.setEnabled(False)
+                fit_type, pot_model, num_depth_point = self.fitter.load_fit_res(new_file[0])
+                if fit_type == 'pot':
+                    self._set_initial_model(pot_model, num_depth_point)
                     self._potential_model_selected()
+                    self._prepare_fit_graphs()
+                    self.fitter.solver.set_external_graphs(self.fit_graphs_items)
+                    self._display_cycle()
+                    self._ui.tab_intensity.setEnabled(True)
                     self._ui.tab_potential.setEnabled(True)
+                else:
+                    raise RuntimeError('Not implemented')
 
-            self._block_signals(False)
+            elif '.mat' in new_file[1]:
+                self._ui.cb_experimental_set.setEnabled(True)
+                self._get_data_sets()
+                self.fitter.set_new_data_file(self._working_file, self._working_set)
+                self._ui.tab_intensity.setEnabled(True)
+
+                file_list = [f for f in os.listdir(self._working_dir) if os.path.isfile(os.path.join(self._working_dir, f))
+                                                       and os.path.splitext(f)[-1] == ".sw"]
+
+                for file in file_list:
+                    if os.path.splitext(file)[0] == os.path.splitext(os.path.split(new_file[0])[1])[0]:
+                        self.fitter.set_new_sw_file(os.path.join(self._working_dir, file))
+                        self._potential_model_selected()
+                        self._ui.tab_potential.setEnabled(True)
+                pass
+            else:
+                raise RuntimeError('Not implemented')
+
+        self._block_signals(False)
     # ----------------------------------------------------------------------
     def _new_set_selected(self):
+
         self._working_set = self._ui.cb_experimental_set.currentText()
         self.fitter.set_new_data_file(self._working_file, self._working_set)
         self._potential_model_edited()
@@ -221,6 +258,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _set_initial_model(self, set_model, points=None):
+
         for model in self.list_of_models:
             if model['code'] == set_model:
                 if self.refreshComboBox(self._ui.p_cb_cmb_model, model['name']):
@@ -263,7 +301,6 @@ class NTR_Window(QtWidgets.QMainWindow):
                 self._model_widgets.append(self._get_widget(model['default_widget']))
 
         self._update_layouts(self._ui.p_wc_deg_freedom, self._model_widgets)
-        self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'])
         self._potential_model_edited()
 
     # ----------------------------------------------------------------------
@@ -303,6 +340,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _potential_model_edited(self):
+
         new_set = []
         for widget in self._model_widgets:
             raw_ans = widget.getValues()
@@ -312,11 +350,14 @@ class NTR_Window(QtWidgets.QMainWindow):
         new_set = np.vstack(new_set)
         new_set = new_set[new_set.argsort(axis=0)[:, 0]]
 
+        self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'])
         self.fitter.sim_profile_shifts(new_set[:, 0], new_set[:, 1], self.g_ps_pot_plot,
                                        self.g_ps_shift_source_plot, self.g_ps_shift_sim_plot)
 
     # ----------------------------------------------------------------------
     def _prepare_fit_graphs(self):
+
+        self.fit_pot_graphs_layout.clear()
 
         self.fit_graphs_items = {'potential': None, 'd_points': [], 'v_points': [], 'shifts': None}
 
@@ -327,20 +368,82 @@ class NTR_Window(QtWidgets.QMainWindow):
         for ind in range(self._current_model['num_deg_freedom']):
             self.fit_graphs_items['d_points'].append(self.fit_pot_graphs_layout.addPlot(title="D_{}".format(ind),
                                                                                         row=1, col=ind))
-        self.fit_graphs_items['potential'] = self.fit_pot_graphs_layout.addPlot(title="Potential", row=1, col=ind + 1)
-        self.fit_graphs_items['shifts'] = self.fit_pot_graphs_layout.addPlot(title="Shifts", row=1, col=ind + 2)
+        if self._current_model['num_deg_freedom']:
+            start_ind = ind + 1
+        else:
+            start_ind = 0
+        self.fit_graphs_items['potential'] = self.fit_pot_graphs_layout.addPlot(title="Potential", row=1, col=start_ind)
+        self.fit_graphs_items['shifts'] = self.fit_pot_graphs_layout.addPlot(title="Shifts", row=1, col=start_ind + 1)
 
     # ----------------------------------------------------------------------
     def _start_pot_fit(self):
 
+        self._ui.p_but_start_pot_fit.setEnabled(False)
+        self._ui.p_but_stop_pot_fit.setEnabled(True)
         self._prepare_fit_graphs()
-        self.fitter.prepare_graps()
-        self.fitter.set_external_graphs(self.fit_graphs_items)
-        self.fitter.do_intensity_fit(1)
+        self.fitter.solver.reset_fit()
+        self.fitter.solver.set_external_graphs(self.fit_graphs_items)
+        self._worker = ExcThread(self._fitter_worker, 'fitter_worker', self._local_error_queue)
+        self._worker.start()
+
+    # ----------------------------------------------------------------------
+    def _fitter_worker(self):
+
+        self.fitter.do_intensity_fit()
+
+    # ----------------------------------------------------------------------
+    def _stop_pot_fit(self):
+
+        self._ui.p_but_start_pot_fit.setEnabled(True)
+        self._ui.p_but_stop_pot_fit.setEnabled(False)
+
+        self.fitter.stop_fit()
+
+    # ----------------------------------------------------------------------
+    def update_cycles(self, num_cycles, ksi, best_solution):
+
+        self._block_signals(True)
+        self._ui.p_lb_fit_cycle.setText('Cycle: {}. Ksi: {:.2e}'.format(num_cycles, ksi))
+        self._ui.p_srb_cycle.setMaximum(num_cycles)
+        self._ui.p_srb_cycle.setValue(num_cycles)
+        self._ui.p_lb_fit_status.setText('Completed cycles: {}. Best ksi : {:.2e}'.format(num_cycles, ksi))
+
+        counter = 1
+        for widget in self._model_widgets:
+            if isinstance(widget, TopBottomPotential):
+                widget.set_values((best_solution[1][0], best_solution[1][-1]))
+            elif isinstance(widget, BreakingPoint):
+                widget.set_values((best_solution[0][counter] - best_solution[0][0], best_solution[1][counter]))
+                counter = counter + 1
+
+        self._block_signals(False)
+
+    # ----------------------------------------------------------------------
+    def _display_cycle(self):
+        try:
+            cycle = int(self._ui.p_srb_cycle.value())
+            ksi, solution = self.fitter.solver.show_results(cycle)
+            self._ui.p_lb_fit_cycle.setText('Cycle: {}. Ksi: {:.2e}'.format(cycle, ksi))
+            counter = 1
+            for widget in self._model_widgets:
+                if isinstance(widget, TopBottomPotential):
+                    widget.set_values((solution[1][0], solution[1][-1]))
+                elif isinstance(widget, BreakingPoint):
+                    widget.set_values((solution[0][counter] - solution[0][0], solution[1][counter]))
+                    counter = counter + 1
+
+        except:
+            pass
+
+    # ----------------------------------------------------------------------
+    def _prepare_fit_set(self):
+        new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Create file", self._working_dir, '.set')
+        if new_file:
+            self.fitter.dump_fit_set("".join(new_file), generate_data_set=True)
 
     # ----------------------------------------------------------------------
     # ----------------------------------------------------------------------
-    # ----------------------------------------------------------------------
+    # ----------------------------------------------------------------  ------
     def refreshComboBox(self, comboBox, text):
         """Auxiliary function refreshing combo box with a given text.
         """

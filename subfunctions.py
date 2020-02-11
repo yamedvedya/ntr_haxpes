@@ -6,34 +6,10 @@ from potential_models import calculatePotential
 
 ABSORPTION_LENGTH = 5e-6
 
-# ----------------------------------------------------------------------
-def mse_calculator(data_set, tasks_queue, result_array):
 
-    while True:
-        local_job_range = tasks_queue.get()
-        if local_job_range == None:
-            break
-
-        # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
-        mse_list = np.reshape(np.frombuffer(result_array), data_set['fit_points'])
-
-        for ind in range(local_job_range[0], local_job_range[1]):
-            shifts, _ = get_shifts(data_set, ind)
-            if shifts is not None:
-                shifts -= data_set['data'][:, 2]
-                mse_list[ind] = np.inner(shifts, shifts)
-            else:
-                mse_list[ind] = 1e6
-
-        tasks_queue.task_done()
-
-    tasks_queue.task_done()
 
 # ----------------------------------------------------------------------
-def get_shifts(data_set, ind):
-
-    depth_set = data_set['depthset'][:, ind]
-    volt_set = data_set['voltset'][:, ind]
+def get_shifts(data_set, depth_set, volt_set):
 
     if np.where(np.abs(np.diff(volt_set) / np.diff(depth_set) > data_set['FIELD_MAX']))[0].size == 0:
         volts_values = calculatePotential(depth_set, volt_set, data_set['fit_depth_points'], data_set['model'])

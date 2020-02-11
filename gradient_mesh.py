@@ -1,0 +1,524 @@
+from subfunctions import *
+from potential_models import calculatePotential
+import matplotlib.pyplot as plt
+import ctypes
+from scipy import stats
+import multiprocessing as mp
+import look_and_feel as lookandfeel
+import time
+
+class Gradient_Mesh_Solver():
+
+    settings = {}
+
+    # ----------------------------------------------------------------------
+    def __init__(self, parent):
+
+        self.parent = parent
+
+        self.local_data_set = {}
+
+        self.best_ksi = [np.inf]
+        self._fill_counter = 0
+
+        self.solution_history = []
+
+        self.v_graphs_history = []
+        self.d_graphs_history = []
+        self.potential_graphs_history = []
+        self.shifts_graphs_history = []
+
+        self.v_graphs_stack = []
+        self.d_graphs_stack = []
+        self.potential_graph = None
+        self.shifts_graph = None
+
+        self.fig = None
+        self.axes = None
+        self.plots = []
+
+        self.v_set = []
+        self.d_set = []
+
+    # ----------------------------------------------------------------------
+    def reset_fit(self):
+
+        self.best_ksi = [np.inf]
+
+        self.solution_history = []
+
+        self.v_graphs_history = [[] for _ in range(self.parent.num_depth_points)]
+        self.d_graphs_history = [[] for _ in range(self.parent.num_depth_points - 2)]
+        self.potential_graphs_history = []
+        self.shifts_graphs_history = []
+
+        self.v_graphs_stack = []
+        self.d_graphs_stack = []
+        self.potential_graph = None
+        self.shifts_graph = None
+
+        if self.parent.STAND_ALONE_MODE:
+            self.fig, self.axes = plt.subplots(nrows=2, ncols=self.parent.num_depth_points)
+            self.plots = [[] for _ in range(self.parent.num_depth_points * 2)]
+            plt.ion()
+
+    # ----------------------------------------------------------------------
+    def _get_fit_set(self):
+        fit_points = 1
+
+        for v_points in self.v_set:
+            fit_points *= len(v_points)
+
+        for d_points in self.d_set:
+            fit_points *= len(d_points)
+
+        self.local_data_set = {'fit_points': fit_points,
+                    'depthset': np.zeros((self.parent.num_depth_points, fit_points)),
+                    'voltset': np.zeros((self.parent.num_depth_points, fit_points)),
+                    'mse': np.zeros(fit_points),
+                    'last_best_shifts': np.zeros_like(self.parent.main_data_set['data'][:, 2]),
+                    'last_intensity': np.zeros_like(self.parent.main_data_set['data'][:, 1]),
+                    'last_best_potential': np.zeros_like(self.parent.num_depth_points),
+                    'statistics': {},
+                    't_val': stats.t.ppf(1 - self.parent.settings['T'], self.parent.main_data_set['data'].shape[0])}
+
+        self._fill_counter = 0
+        self._fill_voltages([], self.v_set, self.d_set)
+
+
+    # ----------------------------------------------------------------------
+    def set_external_graphs(self, plot_axes):
+
+        for ind in range(self.parent.num_depth_points):
+            plot_axes['v_points'][ind].setLabel('bottom', 'BE, eV')
+            plot_axes['v_points'][ind].setLabel('left', 't statistics')
+            plot_axes['v_points'][ind].setYRange(0, 3)
+            self.v_graphs_stack.append([plot_axes['v_points'][ind].plot(range(self.parent.settings['V_MESH']),
+                                                                        np.ones(self.parent.settings['V_MESH']),
+                                                                        **lookandfeel.MAX_T_STYLE),
+                                        plot_axes['v_points'][ind].plot(range(self.parent.settings['V_MESH']),
+                                                                        np.zeros(self.parent.settings['V_MESH']),
+                                                                        **lookandfeel.T_STAT_STYLE)])
+
+        for ind in range(self.parent.num_depth_points - 2):
+            plot_axes['d_points'][ind].setLabel('bottom', 'Depth, nm')
+            plot_axes['d_points'][ind].setLabel('left', 't statistics')
+            plot_axes['d_points'][ind].setYRange(0, 3)
+            self.d_graphs_stack.append([plot_axes['d_points'][ind].plot(range(self.parent.settings['D_MESH']),
+                                                                        np.ones(self.parent.settings['D_MESH']),
+                                                                        **lookandfeel.MAX_T_STYLE),
+                                        plot_axes['d_points'][ind].plot(range(self.parent.settings['D_MESH']),
+                                                                        np.zeros(self.parent.settings['D_MESH']),
+                                                                        **lookandfeel.T_STAT_STYLE)])
+
+        plot_axes['shifts'].plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
+                                 **lookandfeel.CURRENT_SOURCE_SHIFT)
+        self.shifts_graph = plot_axes['shifts'].plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
+                                                     **lookandfeel.CURRENT_SIM_SHIFT)
+        self.potential_graph = plot_axes['potential'].plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+                                                           np.zeros_like(self.parent.main_data_set['fit_depth_points']),
+                                                           **lookandfeel.CURRENT_POTENTIAL_STYLE)
+
+    # ----------------------------------------------------------------------
+    def prepare_stand_alone_plots(self):
+
+        for ind in range(self.parent.num_depth_points):
+            self.axes[0, ind].set_title('V point {}'.format(ind + 1))
+            self.axes[0, ind].set_xlabel('BE, eV')
+            self.axes[0, ind].set_ylabel('t statistics')
+            self.axes[0, ind].set_ylim([0, 3])
+            self.v_graphs_stack.append([self.axes[0, ind],
+                                        self.axes[0, ind].plot(range(self.parent.settings['V_MESH']),
+                                                               np.ones(self.parent.settings['V_MESH']), 'g--')[0],
+                                        self.axes[0, ind].plot(range(self.parent.settings['V_MESH']),
+                                                               np.zeros(self.parent.settings['V_MESH']), '*-')[0]])
+
+        for ind in range(self.parent.num_depth_points - 2):
+            self.axes[1, ind].set_title('D point {}'.format(ind + 1))
+            self.axes[1, ind].set_xlabel('Depth, nm')
+            self.axes[1, ind].set_ylabel('t statistics')
+            self.axes[1, ind].set_ylim([0, self.local_data_set['t_val'] * 1.5])
+            self.d_graphs_stack.append([self.axes[1, ind],
+                                        self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
+                                                               np.ones(self.parent.settings['D_MESH']), 'g--')[0],
+                                        self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
+                                                               np.zeros(self.parent.settings['D_MESH']), '*-')[0]])
+
+        self.axes[1, self.parent.num_depth_points - 1].plot(self.parent.main_data_set['data'][:, 0],
+                                                            self.parent.main_data_set['data'][:, 2], 'x')
+        self.shifts_graph = [self.axes[1, self.parent.num_depth_points - 1],
+                             self.axes[1, self.parent.num_depth_points - 1].plot(self.parent.main_data_set['data'][:, 0],
+                                                                          self.parent.main_data_set['data'][:, 2], '-')[0]]
+        self.potential_graph = [self.axes[1, self.parent.num_depth_points - 2],
+                                self.axes[1, self.parent.num_depth_points - 2].plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+                                                                                    np.zeros_like(self.parent.main_data_set['fit_depth_points']))[0]]
+
+        # figManager = plt.get_current_fig_manager()
+        # figManager.window.showMaximized()
+        plt.draw()
+        plt.gcf().canvas.flush_events()
+        # time.sleep(5)
+        plt.show()
+
+    # ----------------------------------------------------------------------
+    def plot_result(self):
+        best_ksi_ind = np.argmin(self.local_data_set['mse'])
+        depth_set = self.local_data_set['depthset'][:, best_ksi_ind]
+        volt_set = self.local_data_set['voltset'][:, best_ksi_ind]
+
+
+        self.solution_history.append(np.vstack((depth_set, volt_set)))
+
+        self.local_data_set['last_best_potential'] = calculatePotential(depth_set, volt_set,
+                                                                        self.parent.main_data_set['fit_depth_points'],
+                                                                        self.parent.main_data_set['model'])
+
+        self.potential_graphs_history.append(self.local_data_set['last_best_potential'])
+
+        self.local_data_set['last_best_shifts'], self.local_data_set['last_intensity'] = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+        self.shifts_graphs_history.append(self.local_data_set['last_best_shifts'])
+
+        if self.parent.STAND_ALONE_MODE:
+            self.potential_graph[1].set_ydata(self.local_data_set['last_best_potential'])
+            self.potential_graph[0].relim()
+            self.potential_graph[0].autoscale_view()
+
+            self.shifts_graph[1].set_ydata(self.local_data_set['last_best_shifts'])
+            self.shifts_graph[0].relim()
+            self.shifts_graph[0].autoscale_view()
+        else:
+            self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+                                         self.local_data_set['last_best_potential'])
+            self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], self.local_data_set['last_best_shifts'])
+
+    # ----------------------------------------------------------------------
+    def _generate_start_set(self):
+
+        self.v_set = [np.zeros(self.parent.settings['V_MESH']) for _ in range(self.parent.num_depth_points)]
+
+        v_half_steps = int(np.floor(self.parent.settings['V_MESH'] / 2))
+
+        for point in range(self.parent.num_depth_points):
+            self.v_set[point] = np.linspace(-self.parent.settings['V_STEP'] * v_half_steps, self.parent.settings['V_STEP'] * v_half_steps,
+                                            self.parent.settings['V_MESH'])
+
+        self.d_set = [np.ones(self.parent.settings['D_MESH']) * self.parent.structure[0]
+                      for _ in range(self.parent.num_depth_points - 2)]
+        start_points = np.linspace(self.parent.structure[0], self.parent.structure[0] + self.parent.structure[1],
+                                   self.parent.num_depth_points - 1)
+
+        for point in range(self.parent.num_depth_points - 2):
+            self.d_set[point] = np.linspace(start_points[0 + point], start_points[1 + point],
+                                            self.parent.settings['D_MESH'] + 2)[1:-1]
+
+    # ----------------------------------------------------------------------
+    def _fill_voltages(self, selected_v, last_v_set, d_set):
+        if len(last_v_set) > 1:
+            for v in last_v_set[0]:
+                self._fill_voltages(np.append(selected_v, v), last_v_set[1:], d_set)
+        else:
+            for v in last_v_set[0]:
+                self._fill_depth(np.append(selected_v, v), [], d_set)
+
+    # ----------------------------------------------------------------------
+    def _fill_depth(self, selected_v, selected_d, last_d_set):
+        if len(last_d_set) > 1:
+            for d in last_d_set[0]:
+                self._fill_depth(selected_v, np.append(selected_d, d), last_d_set[1:])
+        elif len(last_d_set) == 1:
+            for d in last_d_set[0]:
+                self.local_data_set['depthset'][:, self._fill_counter] = np.append(self.parent.structure[0],
+                                                                                   np.append(np.append(selected_d, d),
+                                                                                  self.parent.structure[0] + self.parent.structure[1]))
+                self.local_data_set['voltset'][:, self._fill_counter] = selected_v
+                self._fill_counter += 1
+        else:
+            self.local_data_set['depthset'][:, self._fill_counter] = [self.parent.structure[0], self.parent.structure[0] + self.parent.structure[1]]
+            self.local_data_set['voltset'][:, self._fill_counter] = selected_v
+            self._fill_counter += 1
+
+    # ----------------------------------------------------------------------
+    def _analyse_results(self):
+        solution_found = True
+        self.best_ksi.append(np.min(self.local_data_set['mse']))
+
+        self.local_data_set['statistics'] = {"V_points": [[] for _ in range(self.parent.num_depth_points)],
+                                  "D_points": [[] for _ in range(self.parent.num_depth_points - 2)]}
+
+        for point in range(self.parent.num_depth_points):
+            new_set, statistics, parameter_solution_found = \
+                self._analyse_variable_statistic(self.v_set[point], self.local_data_set['voltset'][point, :],
+                                                 self.v_graphs_stack[point], 'volt_point', [-self.parent.settings['VOLT_MAX'],
+                                                                                            self.parent.settings['VOLT_MAX']])
+
+            full_statistics = np.vstack((self.v_set[point], statistics))
+            self.local_data_set['statistics']["V_points"][point] = full_statistics
+            self.v_graphs_history[point].append(full_statistics)
+            self.v_set[point] = new_set
+            solution_found *= parameter_solution_found
+
+        for point in range(self.parent.num_depth_points - 2):
+            new_set, statistics, parameter_solution_found = \
+                self._analyse_variable_statistic(self.d_set[point], self.local_data_set['depthset'][point + 1, :],
+                                                 self.d_graphs_stack[point], 'depth_point', [self.parent.structure[0],
+                                                                                             self.parent.structure[0] +
+                                                                                             self.parent.structure[1]])
+
+            full_statistics = np.vstack((self.d_set[point], statistics))
+            self.local_data_set['statistics']["D_points"][point] = full_statistics
+            self.d_graphs_history[point].append(full_statistics)
+            self.d_set[point] = new_set
+
+            solution_found *= parameter_solution_found
+
+        return solution_found
+    # ----------------------------------------------------------------------
+    def _analyse_variable_statistic(self, variable_set, data_cut, graphs, mode, limits):
+
+        pre_set = np.zeros(3)
+        ksiset = np.zeros((len(variable_set), 2))
+
+        if mode == 'volt_point':
+            mesh = self.parent.settings['V_MESH']
+            step = self.parent.settings['V_STEP']
+            x_shift = 0.0
+        else:
+            mesh = self.parent.settings['D_MESH']
+            step = self.parent.settings['D_STEP']
+            x_shift = limits[0]
+
+        limits[0] += step
+        limits[1] -= step
+
+        for v_point in range(len(variable_set)):
+            all_inds = np.nonzero(data_cut == variable_set[v_point])
+            ksiset[v_point, 0] = variable_set[v_point]
+            ksiset[v_point, 1] = np.min(self.local_data_set['mse'][all_inds])
+
+        t_statistics = np.sqrt(ksiset[:, 1] - self.best_ksi[-1]) / np.sqrt(
+            self.best_ksi[-1] / self.parent.main_data_set['data'].shape[0])
+
+        if self.parent.STAND_ALONE_MODE:
+            graphs[1].set_xdata(variable_set - x_shift)
+            graphs[1].set_ydata(self.local_data_set['t_val'])
+            graphs[2].set_xdata(variable_set- x_shift)
+            graphs[2].set_ydata(t_statistics)
+            graphs[0].relim()
+            graphs[0].autoscale_view()
+        else:
+            graphs[0].setData(variable_set - x_shift, np.ones_like(variable_set) * self.local_data_set['t_val'])
+            graphs[1].setData(variable_set - x_shift, t_statistics)
+
+        if self.best_ksi[-1]*(1 + self.parent.settings['KSI_TOLLERANCE']) < self.best_ksi[-2]:
+            half_steps = int(np.floor(mesh / 2))
+            pre_set = ksiset[np.argmin(ksiset[:, 1]), 0] + np.linspace(-step * half_steps, step * half_steps, mesh)
+            calculated_set = [i for i in pre_set if limits[0] < i < limits[1]]
+            solution_found = False
+        else:
+            solution_found = True
+            region_of_interest = np.nonzero(t_statistics < self.local_data_set['t_val'])
+            lowend = region_of_interest[0][0]
+            upend = region_of_interest[0][-1]
+
+            if lowend == 0:
+                pre_set[0] = variable_set[0] - step
+                if pre_set[0] < limits[0]:
+                    pre_set[0] = limits[0]
+                else:
+                    solution_found *= False
+            elif lowend == mesh - 1:
+                pre_set[0] = variable_set[-1]
+                solution_found *= False
+            else:
+                pre_set[0] = np.interp(self.local_data_set['t_val'], t_statistics[lowend - 1:lowend + 1],
+                                       ksiset[lowend - 1:lowend + 1, 0], period=np.inf)
+
+            pre_set[1] = ksiset[np.argmin(ksiset[:, 1]), 0]
+
+            if upend == 0:
+                pre_set[2] = variable_set[0]
+                solution_found *= False
+            elif upend == mesh - 1:
+                pre_set[2] = variable_set[-1] + step
+                if pre_set[2] > limits[1]:
+                    pre_set[2] = limits[1]
+                else:
+                    solution_found *= False
+            else:
+                pre_set[2] = np.interp(self.local_data_set['t_val'], t_statistics[upend:upend + 2],
+                                       ksiset[upend:upend + 2, 0], period=np.inf)
+
+            calculated_set = np.append(np.linspace(pre_set[0], pre_set[1], int(np.ceil(mesh / 2))),
+                                       np.linspace(pre_set[1], pre_set[2], int(np.ceil(mesh / 2)))[1:])
+
+        return np.array(calculated_set), np.array(t_statistics), solution_found
+
+    # ----------------------------------------------------------------------
+    def _mse_calculator(self, main_data_set, local_data_set, tasks_queue, result_array):
+
+        while True:
+            local_job_range = tasks_queue.get()
+            if local_job_range == None:
+                break
+
+            # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
+            mse_list = np.reshape(np.frombuffer(result_array), main_data_set['fit_points'])
+
+            for ind in range(local_job_range[0], local_job_range[1]):
+                depth_set = local_data_set['depthset'][:, ind]
+                volt_set = local_data_set['voltset'][:, ind]
+                shifts, _ = get_shifts(main_data_set, depth_set, volt_set)
+                if shifts is not None:
+                    shifts -= main_data_set['data'][:, 2]
+                    mse_list[ind] = np.inner(shifts, shifts)
+                else:
+                    mse_list[ind] = 1e6
+
+            tasks_queue.task_done()
+
+        tasks_queue.task_done()
+
+    # ----------------------------------------------------------------------
+    def do_fit(self, cycles=np.Inf):
+
+        self._generate_start_set()
+        self.cycle = 0
+        result_found = False
+
+        while self.cycle < cycles and self.parent.fit_in_progress and not result_found:
+            start_time = time.time()
+            self._get_fit_set()
+
+            print('Fit set preparation time: {}'.format(time.time() - start_time))
+
+            start_time = time.time()
+
+            if self.parent.settings['MULTIPROCESSING']:
+
+                n_cpu = mp.cpu_count()
+                n_tasks = self.parent.settings['N_SUB_JOBS'] * n_cpu
+
+                mse_list = mp.RawArray(ctypes.c_double, self.local_data_set['fit_points'])
+
+                stop_points = np.ceil(np.linspace(0, self.local_data_set['fit_points'], n_tasks + 1))
+                jobs_list = []
+
+                for i in range(n_tasks):
+                    jobs_list.append((int(stop_points[i]), int(min(stop_points[i + 1], self.local_data_set['fit_points']))))
+
+                jobs_queue = mp.JoinableQueue()
+                for job in jobs_list:
+                    jobs_queue.put(job)
+                for _ in range(n_cpu):
+                    jobs_queue.put(None)
+
+                workers = []
+                for i in range(n_cpu):
+                    worker = mp.Process(target=self._mse_calculator,
+                                        args=(self.parent.main_data_set, self.local_data_set, jobs_queue, mse_list))
+                    workers.append(worker)
+                    worker.start()
+
+                jobs_queue.join()
+
+                self.local_data_set['mse'] = np.reshape(np.frombuffer(mse_list), self.local_data_set['fit_points'])
+            else:
+                for ind in range(self.local_data_set['fit_points']):
+                    depth_set = self.local_data_set['depthset'][:, ind]
+                    volt_set = self.local_data_set['voltset'][:, ind]
+                    shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+                    if shifts is not None:
+                        shifts -= self.parent.main_data_set['data'][:, 2]
+                        self.local_data_set['mse'][ind] = np.inner(shifts, shifts)
+                    else:
+                        self.local_data_set['mse'][ind] = 1e6
+
+            error_cycle_time = time.time() - start_time
+            print('Error calculation time: {}, time per point: {}'.format(error_cycle_time,
+                                                                          np.round(error_cycle_time /
+                                                                                   self.local_data_set['fit_points'], 6)))
+
+            start_time = time.time()
+            self.plot_result()
+            result_found = self._analyse_results()
+            self.parent.save_fit_res()
+            print('Plot and save time: {}'.format(time.time() - start_time))
+
+            self.cycle += 1
+            print('Cycle {} from {} completed'.format(self.cycle, cycles))
+
+            if self.parent.STAND_ALONE_MODE:
+                plt.draw()
+                plt.gcf().canvas.flush_events()
+            else:
+                self.parent.gui.update_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
+
+        self.cycle -= 1
+        plt.ioff()
+        plt.show()
+
+    # ----------------------------------------------------------------------
+    def show_results(self, idx):
+
+        ind = 0
+        if self.cycle > 0:
+            ind = int(min(self.cycle, idx))
+
+        if len(self.shifts_graphs_history) > 0:
+            if self.parent.STAND_ALONE_MODE:
+                self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
+                self.potential_graph[0].relim()
+                self.potential_graph[0].autoscale_view()
+
+                self.shifts_graph[1].set_ydata(self.shifts_graphs_history[ind])
+                self.shifts_graph[0].relim()
+                self.shifts_graph[0].autoscale_view()
+
+                for point in range(self.parent.num_depth_points):
+                    self.v_graphs_stack[point][1].set_xdata(self.v_graphs_history[point][ind][0, :])
+                    self.v_graphs_stack[point][2].set_xdata(self.v_graphs_history[point][ind][0, :])
+                    self.v_graphs_stack[point][2].set_ydata(self.v_graphs_history[point][ind][1, :])
+                    self.v_graphs_stack[point][0].relim()
+                    self.v_graphs_stack[point][0].autoscale_view()
+
+                for point in range(self.parent.num_depth_points-2):
+                    self.d_graphs_stack[point][1].set_xdata(self.d_graphs_history[point][ind][0, :])
+                    self.d_graphs_stack[point][2].set_xdata(self.d_graphs_history[point][ind][0, :])
+                    self.d_graphs_stack[point][2].set_ydata(self.d_graphs_history[point][ind][1, :])
+                    self.d_graphs_stack[point][0].relim()
+                    self.d_graphs_stack[point][0].autoscale_view()
+            else:
+                self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+                                             self.potential_graphs_history[ind])
+                self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], self.shifts_graphs_history[ind])
+
+                for point in range(self.parent.num_depth_points):
+                    self.v_graphs_stack[point][0].setData(self.v_graphs_history[point][ind][0, :],
+                                                          np.ones_like(self.v_graphs_history[point][ind][0, :])
+                                                          * self.local_data_set['t_val'])
+                    self.v_graphs_stack[point][1].setData(self.v_graphs_history[point][ind][0, :],
+                                                          self.v_graphs_history[point][ind][1, :])
+
+                for point in range(self.parent.num_depth_points - 2):
+                    self.d_graphs_stack[point][0].setData(self.d_graphs_history[point][ind][0, :],
+                                                          np.ones_like(self.d_graphs_history[point][ind][0, :])
+                                                          * self.local_data_set['t_val'])
+                    self.d_graphs_stack[point][1].setData(self.d_graphs_history[point][ind][0, :],
+                                                          self.d_graphs_history[point][ind][1, :])
+
+                return self.best_ksi[ind+1], self.solution_history[ind]
+
+    # ----------------------------------------------------------------------
+    def load_fit_res(self, loaded_data):
+        self.best_ksi.append(np.min(loaded_data['mse']))
+        self.potential_graphs_history.append(loaded_data['last_best_potential'])
+        self.shifts_graphs_history.append(loaded_data['last_best_shifts'])
+        min_ind = np.argmin(loaded_data['mse'])
+        self.solution_history.append(
+            np.vstack((loaded_data['depthset'][:, min_ind], loaded_data['voltset'][:, min_ind])))
+
+        for point in range(self.parent.num_depth_points):
+            self.v_graphs_history[point].append(loaded_data['statistics']["V_points"][point])
+
+        for point in range(self.parent.num_depth_points - 2):
+            self.d_graphs_history[point].append(loaded_data['statistics']["D_points"][point])
