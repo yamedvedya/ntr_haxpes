@@ -57,7 +57,7 @@ class Gradient_Mesh_Solver():
         self.potential_graph = None
         self.shifts_graph = None
 
-        if self.parent.STAND_ALONE_MODE:
+        if self.parent.STAND_ALONE_MODE and self.parent.DO_PLOT:
             self.fig, self.axes = plt.subplots(nrows=2, ncols=self.parent.num_depth_points)
             self.plots = [[] for _ in range(self.parent.num_depth_points * 2)]
             plt.ion()
@@ -85,37 +85,47 @@ class Gradient_Mesh_Solver():
         self._fill_counter = 0
         self._fill_voltages([], self.v_set, self.d_set)
 
-
     # ----------------------------------------------------------------------
-    def set_external_graphs(self, plot_axes):
+    def set_external_graphs(self, graphs_layout):
 
         for ind in range(self.parent.num_depth_points):
-            plot_axes['v_points'][ind].setLabel('bottom', 'BE, eV')
-            plot_axes['v_points'][ind].setLabel('left', 't statistics')
-            plot_axes['v_points'][ind].setYRange(0, 3)
-            self.v_graphs_stack.append([plot_axes['v_points'][ind].plot(range(self.parent.settings['V_MESH']),
+            plot_axes = graphs_layout.addPlot(title="V_{}".format(ind), row=0, col=ind)
+            plot_axes.setLabel('bottom', 'BE, eV')
+            plot_axes.setLabel('left', 't statistics')
+            plot_axes.setYRange(0, 3)
+            self.v_graphs_stack.append([plot_axes.plot(range(self.parent.settings['V_MESH']),
                                                                         np.ones(self.parent.settings['V_MESH']),
                                                                         **lookandfeel.MAX_T_STYLE),
-                                        plot_axes['v_points'][ind].plot(range(self.parent.settings['V_MESH']),
+                                        plot_axes.plot(range(self.parent.settings['V_MESH']),
                                                                         np.zeros(self.parent.settings['V_MESH']),
                                                                         **lookandfeel.T_STAT_STYLE)])
 
+        ind = 0
         for ind in range(self.parent.num_depth_points - 2):
-            plot_axes['d_points'][ind].setLabel('bottom', 'Depth, nm')
-            plot_axes['d_points'][ind].setLabel('left', 't statistics')
-            plot_axes['d_points'][ind].setYRange(0, 3)
-            self.d_graphs_stack.append([plot_axes['d_points'][ind].plot(range(self.parent.settings['D_MESH']),
+            plot_axes = graphs_layout.addPlot(title="D_{}".format(ind), row=1, col=ind)
+            plot_axes.setLabel('bottom', 'Depth, nm')
+            plot_axes.setLabel('left', 't statistics')
+            plot_axes.setYRange(0, 3)
+            self.d_graphs_stack.append([plot_axes.plot(range(self.parent.settings['D_MESH']),
                                                                         np.ones(self.parent.settings['D_MESH']),
                                                                         **lookandfeel.MAX_T_STYLE),
-                                        plot_axes['d_points'][ind].plot(range(self.parent.settings['D_MESH']),
+                                        plot_axes.plot(range(self.parent.settings['D_MESH']),
                                                                         np.zeros(self.parent.settings['D_MESH']),
                                                                         **lookandfeel.T_STAT_STYLE)])
 
-        plot_axes['shifts'].plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
+        if self.parent.num_depth_points - 2:
+            start_ind = ind + 1
+        else:
+            start_ind = 0
+
+        shifts_plot = graphs_layout.addPlot(title="Shifts", row=1, col=start_ind + 1)
+        shifts_plot.plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
                                  **lookandfeel.CURRENT_SOURCE_SHIFT)
-        self.shifts_graph = plot_axes['shifts'].plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
+        self.shifts_graph = shifts_plot.plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
                                                      **lookandfeel.CURRENT_SIM_SHIFT)
-        self.potential_graph = plot_axes['potential'].plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+
+        potential_plot = graphs_layout.addPlot(title="Potential", row=1, col=start_ind)
+        self.potential_graph = potential_plot.plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
                                                            np.zeros_like(self.parent.main_data_set['fit_depth_points']),
                                                            **lookandfeel.CURRENT_POTENTIAL_STYLE)
 
@@ -137,7 +147,7 @@ class Gradient_Mesh_Solver():
             self.axes[1, ind].set_title('D point {}'.format(ind + 1))
             self.axes[1, ind].set_xlabel('Depth, nm')
             self.axes[1, ind].set_ylabel('t statistics')
-            self.axes[1, ind].set_ylim([0, self.local_data_set['t_val'] * 1.5])
+            self.axes[1, ind].set_ylim([0, 3])
             self.d_graphs_stack.append([self.axes[1, ind],
                                         self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
                                                                np.ones(self.parent.settings['D_MESH']), 'g--')[0],
@@ -153,15 +163,13 @@ class Gradient_Mesh_Solver():
                                 self.axes[1, self.parent.num_depth_points - 2].plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
                                                                                     np.zeros_like(self.parent.main_data_set['fit_depth_points']))[0]]
 
-        # figManager = plt.get_current_fig_manager()
-        # figManager.window.showMaximized()
         plt.draw()
         plt.gcf().canvas.flush_events()
-        # time.sleep(5)
+        time.sleep(1)
         plt.show()
 
     # ----------------------------------------------------------------------
-    def plot_result(self):
+    def _plot_result(self):
         best_ksi_ind = np.argmin(self.local_data_set['mse'])
         depth_set = self.local_data_set['depthset'][:, best_ksi_ind]
         volt_set = self.local_data_set['voltset'][:, best_ksi_ind]
@@ -192,23 +200,18 @@ class Gradient_Mesh_Solver():
             self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], self.local_data_set['last_best_shifts'])
 
     # ----------------------------------------------------------------------
-    def _generate_start_set(self):
+    def _generate_start_set(self, start_values):
 
         self.v_set = [np.zeros(self.parent.settings['V_MESH']) for _ in range(self.parent.num_depth_points)]
 
         v_half_steps = int(np.floor(self.parent.settings['V_MESH'] / 2))
 
         for point in range(self.parent.num_depth_points):
-            self.v_set[point] = np.linspace(-self.parent.settings['V_STEP'] * v_half_steps, self.parent.settings['V_STEP'] * v_half_steps,
+            self.v_set[point] = start_values[point][1] + np.linspace(-self.parent.settings['V_STEP'] * v_half_steps, self.parent.settings['V_STEP'] * v_half_steps,
                                             self.parent.settings['V_MESH'])
 
-        self.d_set = [np.ones(self.parent.settings['D_MESH']) * self.parent.structure[0]
-                      for _ in range(self.parent.num_depth_points - 2)]
-        start_points = np.linspace(self.parent.structure[0], self.parent.structure[0] + self.parent.structure[1],
-                                   self.parent.num_depth_points - 1)
-
         for point in range(self.parent.num_depth_points - 2):
-            self.d_set[point] = np.linspace(start_points[0 + point], start_points[1 + point],
+            self.d_set[point] = np.linspace(start_values[point][0], start_values[point + 2][0],
                                             self.parent.settings['D_MESH'] + 2)[1:-1]
 
     # ----------------------------------------------------------------------
@@ -248,9 +251,11 @@ class Gradient_Mesh_Solver():
         for point in range(self.parent.num_depth_points):
             new_set, statistics, parameter_solution_found = \
                 self._analyse_variable_statistic(self.v_set[point], self.local_data_set['voltset'][point, :],
-                                                 self.v_graphs_stack[point], 'volt_point', [-self.parent.settings['VOLT_MAX'],
-                                                                                            self.parent.settings['VOLT_MAX']])
+                                                 'volt_point', [-self.parent.settings['VOLT_MAX'],
+                                                                self.parent.settings['VOLT_MAX']])
 
+            if self.parent.DO_PLOT:
+                self.plot_statistics(self.v_graphs_stack[point], self.v_set[point], statistics)
             full_statistics = np.vstack((self.v_set[point], statistics))
             self.local_data_set['statistics']["V_points"][point] = full_statistics
             self.v_graphs_history[point].append(full_statistics)
@@ -260,9 +265,11 @@ class Gradient_Mesh_Solver():
         for point in range(self.parent.num_depth_points - 2):
             new_set, statistics, parameter_solution_found = \
                 self._analyse_variable_statistic(self.d_set[point], self.local_data_set['depthset'][point + 1, :],
-                                                 self.d_graphs_stack[point], 'depth_point', [self.parent.structure[0],
-                                                                                             self.parent.structure[0] +
+                                                 'depth_point', [self.parent.structure[0], self.parent.structure[0] +
                                                                                              self.parent.structure[1]])
+
+            if self.parent.DO_PLOT:
+                self.plot_statistics(self.d_graphs_stack[point], self.d_set[point] - self.parent.structure[0], statistics)
 
             full_statistics = np.vstack((self.d_set[point], statistics))
             self.local_data_set['statistics']["D_points"][point] = full_statistics
@@ -272,8 +279,23 @@ class Gradient_Mesh_Solver():
             solution_found *= parameter_solution_found
 
         return solution_found
+
     # ----------------------------------------------------------------------
-    def _analyse_variable_statistic(self, variable_set, data_cut, graphs, mode, limits):
+    def plot_statistics(self, graphs, var_set, statistics):
+
+            if self.parent.STAND_ALONE_MODE:
+                graphs[1].set_xdata(var_set)
+                graphs[1].set_ydata(np.ones_like(var_set)*self.local_data_set['t_val'])
+                graphs[2].set_xdata(var_set)
+                graphs[2].set_ydata(statistics)
+                graphs[0].relim()
+                graphs[0].autoscale_view()
+            else:
+                graphs[0].setData(var_set, np.ones_like(var_set)*self.local_data_set['t_val'])
+                graphs[1].setData(var_set, statistics)
+
+    # ----------------------------------------------------------------------
+    def _analyse_variable_statistic(self, variable_set, data_cut, mode, limits):
 
         pre_set = np.zeros(3)
         ksiset = np.zeros((len(variable_set), 2))
@@ -297,17 +319,6 @@ class Gradient_Mesh_Solver():
 
         t_statistics = np.sqrt(ksiset[:, 1] - self.best_ksi[-1]) / np.sqrt(
             self.best_ksi[-1] / self.parent.main_data_set['data'].shape[0])
-
-        if self.parent.STAND_ALONE_MODE:
-            graphs[1].set_xdata(variable_set - x_shift)
-            graphs[1].set_ydata(self.local_data_set['t_val'])
-            graphs[2].set_xdata(variable_set- x_shift)
-            graphs[2].set_ydata(t_statistics)
-            graphs[0].relim()
-            graphs[0].autoscale_view()
-        else:
-            graphs[0].setData(variable_set - x_shift, np.ones_like(variable_set) * self.local_data_set['t_val'])
-            graphs[1].setData(variable_set - x_shift, t_statistics)
 
         if self.best_ksi[-1]*(1 + self.parent.settings['KSI_TOLLERANCE']) < self.best_ksi[-2]:
             half_steps = int(np.floor(mesh / 2))
@@ -379,13 +390,17 @@ class Gradient_Mesh_Solver():
         tasks_queue.task_done()
 
     # ----------------------------------------------------------------------
-    def do_fit(self, cycles=np.Inf):
+    def get_data_for_save(self):
 
-        self._generate_start_set()
+        return self.local_data_set
+    # ----------------------------------------------------------------------
+    def do_fit(self, start_values):
+
+        self._generate_start_set(start_values)
         self.cycle = 0
         result_found = False
 
-        while self.cycle < cycles and self.parent.fit_in_progress and not result_found:
+        while self.parent.fit_in_progress and not result_found:
             start_time = time.time()
             self._get_fit_set()
 
@@ -434,12 +449,16 @@ class Gradient_Mesh_Solver():
                         self.local_data_set['mse'][ind] = 1e6
 
             error_cycle_time = time.time() - start_time
-            print('Error calculation time: {}, time per point: {}'.format(error_cycle_time,
-                                                                          np.round(error_cycle_time /
-                                                                                   self.local_data_set['fit_points'], 6)))
+            try:
+                time_pre_point = np.round(error_cycle_time / self.local_data_set['fit_points'], 6)
+            except:
+                time_pre_point = 0
+
+            print('Error calculation time: {}, time per point: {}'.format(error_cycle_time, time_pre_point))
 
             start_time = time.time()
-            self.plot_result()
+            if self.parent.DO_PLOT:
+                self._plot_result()
             result_found = self._analyse_results()
             self.parent.save_fit_res()
             print('Plot and save time: {}'.format(time.time() - start_time))

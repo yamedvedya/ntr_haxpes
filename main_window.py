@@ -99,6 +99,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             msg.setInformativeText(error[1].args[0] + str(trbck_msg))
             msg.setWindowTitle("Error")
             msg.exec_()
+
     # ----------------------------------------------------------------------
     def _set_default_settings(self):
 
@@ -214,8 +215,8 @@ class NTR_Window(QtWidgets.QMainWindow):
                 if fit_type == 'pot':
                     self._set_initial_model(pot_model, num_depth_point)
                     self._potential_model_selected()
-                    self._prepare_fit_graphs()
-                    self.fitter.solver.set_external_graphs(self.fit_graphs_items)
+                    self.fit_pot_graphs_layout.clear()
+                    self.fitter.solver.set_external_graphs(self.fit_pot_graphs_layout)
                     self._display_cycle()
                     self._ui.tab_intensity.setEnabled(True)
                     self._ui.tab_potential.setEnabled(True)
@@ -339,8 +340,7 @@ class NTR_Window(QtWidgets.QMainWindow):
         layout.addStretch()
 
     # ----------------------------------------------------------------------
-    def _potential_model_edited(self):
-
+    def _get_variable_values(self):
         new_set = []
         for widget in self._model_widgets:
             raw_ans = widget.getValues()
@@ -348,7 +348,12 @@ class NTR_Window(QtWidgets.QMainWindow):
                 new_set.append(pair)
 
         new_set = np.vstack(new_set)
-        new_set = new_set[new_set.argsort(axis=0)[:, 0]]
+        return new_set[new_set.argsort(axis=0)[:, 0]]
+
+    # ----------------------------------------------------------------------
+    def _potential_model_edited(self):
+
+        new_set = self._get_variable_values()
 
         self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'])
         self.fitter.sim_profile_shifts(new_set[:, 0], new_set[:, 1], self.g_ps_pot_plot,
@@ -359,37 +364,22 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self.fit_pot_graphs_layout.clear()
 
-        self.fit_graphs_items = {'potential': None, 'd_points': [], 'v_points': [], 'shifts': None}
-
-        for ind in range(self._current_model['default_degree_of_freedom'] + self._current_model['num_deg_freedom']):
-            self.fit_graphs_items['v_points'].append(self.fit_pot_graphs_layout.addPlot(title="V_{}".format(ind),
-                                                                                        row=0, col=ind))
-        ind = 0
-        for ind in range(self._current_model['num_deg_freedom']):
-            self.fit_graphs_items['d_points'].append(self.fit_pot_graphs_layout.addPlot(title="D_{}".format(ind),
-                                                                                        row=1, col=ind))
-        if self._current_model['num_deg_freedom']:
-            start_ind = ind + 1
-        else:
-            start_ind = 0
-        self.fit_graphs_items['potential'] = self.fit_pot_graphs_layout.addPlot(title="Potential", row=1, col=start_ind)
-        self.fit_graphs_items['shifts'] = self.fit_pot_graphs_layout.addPlot(title="Shifts", row=1, col=start_ind + 1)
 
     # ----------------------------------------------------------------------
     def _start_pot_fit(self):
 
         self._ui.p_but_start_pot_fit.setEnabled(False)
         self._ui.p_but_stop_pot_fit.setEnabled(True)
-        self._prepare_fit_graphs()
+        self.fit_pot_graphs_layout.clear()
         self.fitter.solver.reset_fit()
-        self.fitter.solver.set_external_graphs(self.fit_graphs_items)
+        self.fitter.solver.set_external_graphs(self.fit_pot_graphs_layout)
         self._worker = ExcThread(self._fitter_worker, 'fitter_worker', self._local_error_queue)
         self._worker.start()
 
     # ----------------------------------------------------------------------
     def _fitter_worker(self):
 
-        self.fitter.do_intensity_fit()
+        self.fitter.do_intensity_fit(self._get_variable_values())
 
     # ----------------------------------------------------------------------
     def _stop_pot_fit(self):

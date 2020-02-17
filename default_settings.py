@@ -10,7 +10,9 @@ VOLT_MAX = 1
 
 T = 0.05
 KSI_TOLLERANCE = 1e-2
-FIT_METHOD = 'mesh_gradient'
+FIT_METHOD = 'lmfit'
+MONITOR_FIT = True
+DISPLAY_EACH_X_STEP = 1
 V_MESH = 5
 D_MESH = 5
 V_STEP = 0.01

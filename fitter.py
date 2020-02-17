@@ -3,18 +3,20 @@
 
 from optparse import OptionParser
 from gradient_mesh import Gradient_Mesh_Solver
+from lmfit_solver import LMFit_Solver
 from subfunctions import *
 from potential_models import calculatePotential
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-import time
+from distutils.util import strtobool
 import pickle
 import os
 
 class NTR_fitter():
 
     STAND_ALONE_MODE = True
+    DO_PLOT = True
     settings = {}
     METHODS = ('mesh_gradient', 'gradient')
 
@@ -49,6 +51,8 @@ class NTR_fitter():
 
         if settings['FIT_METHOD'] == 'mesh_gradient':
             self.solver = Gradient_Mesh_Solver(self)
+        elif settings['FIT_METHOD'] == 'lmfit':
+            self.solver = LMFit_Solver(self)
     # ----------------------------------------------------------------------
     def form_basic_data(self):
 
@@ -130,9 +134,9 @@ class NTR_fitter():
 
         with open(file_name, 'wb') as f:
             pickle.dump({'_sample_name': self._sample_name, 'fit_type': fit_type, 'sw': self.sw,
-                         'main_data_set' : self.main_data_set, 'num_depth_points': self.num_depth_points,
-                        'settings': self.settings, 'structure': self.structure, 'angle_shift': self.angle_shift,
-                        'be_shift': self.be_shift, 't_val': self.t_val}, f, pickle.HIGHEST_PROTOCOL)
+                         'main_data_set': self.main_data_set, 'num_depth_points': self.num_depth_points,
+                         'settings': self.settings, 'structure': self.structure, 'angle_shift': self.angle_shift,
+                         'be_shift': self.be_shift, 't_val': self.t_val}, f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------
     def load_fit_set(self, file_name):
@@ -147,6 +151,8 @@ class NTR_fitter():
 
         if self.settings['FIT_METHOD'] == 'mesh_gradient':
             self.solver = Gradient_Mesh_Solver(self)
+        elif self.settings['FIT_METHOD']  == 'lmfit':
+            self.solver = LMFit_Solver(self)
         self.solver.reset_fit()
 
     # ----------------------------------------------------------------------
@@ -162,7 +168,7 @@ class NTR_fitter():
             self.dump_fit_set(full_path, fit_type='pot')
 
         with open(full_path, 'ab') as f:
-            pickle.dump(self.solver.local_data_set, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.solver.get_data_for_save(), f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------
     def load_fit_res(self, file_name):
@@ -189,15 +195,11 @@ class NTR_fitter():
         return 'pot', self.main_data_set['model'], self.num_depth_points-2
 
     # ----------------------------------------------------------------------
-    def do_intensity_fit(self, cycles=np.inf):
+    def do_intensity_fit(self, start_values):
 
         self.fit_in_progress = True
 
-        if cycles < np.inf:
-            up_lim = cycles
-        else:
-            up_lim = 50
-        if self.STAND_ALONE_MODE:
+        if self.STAND_ALONE_MODE and self.DO_PLOT:
             self.sidx = Slider(plt.axes([0.1, 0.02, 0.8, 0.03]), 'Cycle#', 0, up_lim, valinit=up_lim, valstep=1)
             self.sidx.on_changed(self.solver.show_results)
             self.solver.prepare_stand_alone_plots()
@@ -209,7 +211,7 @@ class NTR_fitter():
 
         self._fit_name = self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
 
-        self.solver.do_fit(cycles)
+        self.solver.do_fit(start_values)
 
     # ----------------------------------------------------------------------
     def stop_fit(self):
@@ -225,8 +227,13 @@ class NTR_fitter():
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-s", "--data_set", dest="data_set")
+    parser.add_option("-p", "--plot", dest="do_plot", default=False)
     (options, _) = parser.parse_args()
     if options.data_set:
         fitter = NTR_fitter()
+        if options.do_plot:
+            fitter.DO_PLOT = strtobool(options.do_plot)
+        else:
+            fitter.DO_PLOT = False
         fitter.load_fit_set(options.data_set)
         fitter.do_intensity_fit()
