@@ -200,7 +200,7 @@ class NTR_fitter():
         self.fit_in_progress = True
 
         if self.STAND_ALONE_MODE and self.DO_PLOT:
-            self.sidx = Slider(plt.axes([0.1, 0.02, 0.8, 0.03]), 'Cycle#', 0, up_lim, valinit=up_lim, valstep=1)
+            self.sidx = Slider(plt.axes([0.1, 0.02, 0.8, 0.03]), 'Cycle#', 0, 1, valinit=1, valstep=1)
             self.sidx.on_changed(self.solver.show_results)
             self.solver.prepare_stand_alone_plots()
 
