@@ -364,7 +364,6 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self.fit_pot_graphs_layout.clear()
 
-
     # ----------------------------------------------------------------------
     def _start_pot_fit(self):
 
@@ -429,7 +428,11 @@ class NTR_Window(QtWidgets.QMainWindow):
     def _prepare_fit_set(self):
         new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Create file", self._working_dir, '.set')
         if new_file:
-            self.fitter.dump_fit_set("".join(new_file), generate_data_set=True)
+            if '.set' in new_file[0]:
+                file_name = new_file[0]
+            else:
+                file_name = "".join(new_file)
+            self.fitter.dump_fit_set(file_name, generate_data_set=True, start_values=self._get_variable_values())
 
     # ----------------------------------------------------------------------
     # ----------------------------------------------------------------------

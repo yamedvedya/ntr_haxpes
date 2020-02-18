@@ -464,7 +464,7 @@ class Gradient_Mesh_Solver():
             print('Plot and save time: {}'.format(time.time() - start_time))
 
             self.cycle += 1
-            print('Cycle {} from {} completed'.format(self.cycle, cycles))
+            print('Cycle {} completed'.format(self.cycle))
 
             if self.parent.STAND_ALONE_MODE:
                 plt.draw()

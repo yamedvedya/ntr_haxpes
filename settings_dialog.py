@@ -15,7 +15,7 @@ class Settings_Window(QtWidgets.QMainWindow):
 
         ('T', 'sp_t_value', 'sb_dbl'),
         ('KSI_TOLLERANCE', 'sb_fit_tolerance', 'sb_dbl'),
-        ('FIT_METHOD', 'cb_fit_method', 'cb'),
+        ('FIT_SOLVER', 'cb_solver', 'cb'),
         ('V_MESH', 'sp_v_mesh', 'sb_int'),
         ('D_MESH', 'sp_d_mesh', 'sb_int'),
         ('V_STEP', 'sp_v_step', 'sb_dbl'),
@@ -28,7 +28,13 @@ class Settings_Window(QtWidgets.QMainWindow):
         ('MULTIPROCESSING', 'chk_use_mp', 'chk'),
         ('N_SUB_JOBS', 'sb_jobs_cpu', 'sb_int'),
         ('USE_ALL_CORES', 'chk_mp_all_cores', 'chk'),
-        ('NUM_CORES', 'sp_num_cores', 'sb_int'))
+        ('NUM_CORES', 'sp_num_cores', 'sb_int'),
+
+        ('DISPLAY_EACH_X_STEP', 'sb_lm_fit_monitor_step', 'sb_int'),
+        ('MONITOR_FIT', 'chk_lm_fit_monitor', 'chk'),
+        ('METHOD', 'cb_lm_fit_method', 'cb'))
+
+    _available_methods = []
 
     # ----------------------------------------------------------------------
     def __init__(self):
@@ -51,13 +57,13 @@ class Settings_Window(QtWidgets.QMainWindow):
         self._ui.dialog_buttons.button(QtWidgets.QDialogButtonBox.RestoreDefaults).clicked.connect(self._reset_defaults)
 
         self._ui.chk_use_mp.stateChanged.connect(self._enable_mp)
-        self._ui.chk_mp_all_cores.stateChanged.connect(lambda: self._ui.sp_num_cores.setEnabled(not self._ui.chk_mp_all_cores.isChecked()))
+        self._ui.chk_mp_all_cores.stateChanged.connect(
+            lambda: self._ui.sp_num_cores.setEnabled(not self._ui.chk_mp_all_cores.isChecked()))
 
-    # ----------------------------------------------------------------------
-    def block_signals(self, state):
-        self._ui.chk_use_mp.blockSignals(state)
-        self._ui.chk_mp_all_cores.blockSignals(state)
-        self._ui.cb_fit_method.blockSignals(state)
+        self._ui.cb_solver.currentIndexChanged.connect(self._select_method)
+
+        self._ui.chk_lm_fit_monitor.stateChanged.connect(
+            lambda: self._ui.sb_lm_fit_monitor_step.setEnabled(not self._ui.chk_lm_fit_monitor.isChecked()))
 
     # ----------------------------------------------------------------------
     def _enable_mp(self):
@@ -68,8 +74,6 @@ class Settings_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def set_options(self, options):
-
-        self.block_signals(True)
 
         for opt_key, value in options.items():
             for setting_key, ui_name, ui_type in self.settings_objects:
@@ -85,7 +89,7 @@ class Settings_Window(QtWidgets.QMainWindow):
                     elif ui_type == 'cb':
                         self.refreshComboBox(getattr(self._ui, ui_name), value)
 
-        self.block_signals(False)
+        self._select_method()
 
     # ----------------------------------------------------------------------
     def apply(self):
@@ -107,8 +111,20 @@ class Settings_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def fill_methods(self, methods):
+
         for method in methods:
-            self._ui.cb_fit_method.addItem(str(method))
+            self._ui.cb_solver.addItem(str(method))
+
+        self._available_methods = methods
+
+    # ----------------------------------------------------------------------
+    def _select_method(self):
+
+        for method in self._available_methods:
+            getattr(self._ui, 'f_{}'.format(method)).setVisible(False)
+
+        selected_method = str(self._ui.cb_solver.currentText())
+        getattr(self._ui, 'f_{}'.format(selected_method)).setVisible(True)
 
     # ----------------------------------------------------------------------
     def _reset_defaults(self):

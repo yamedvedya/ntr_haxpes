@@ -70,7 +70,7 @@ class LMFit_Solver(Base_For_External_Solver):
             self.result = minimize(self._errFunc, self.parameters, method='leastsq', iter_cb=self._fit_monitor)
             self._display_step(self.result.params)
 
-            
+
             self.parent.save_fit_res()
 
             if self.parent.STAND_ALONE_MODE:

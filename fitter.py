@@ -4,6 +4,7 @@
 from optparse import OptionParser
 from gradient_mesh import Gradient_Mesh_Solver
 from lmfit_solver import LMFit_Solver
+from pysot_solver import PySOT_Solver
 from subfunctions import *
 from potential_models import calculatePotential
 from datetime import datetime
@@ -18,7 +19,7 @@ class NTR_fitter():
     STAND_ALONE_MODE = True
     DO_PLOT = True
     settings = {}
-    METHODS = ('mesh_gradient', 'gradient')
+    METHODS = ('mesh_gradient', 'lm_fit', 'pysot')
 
     # ----------------------------------------------------------------------
     def __init__(self, gui=None):
@@ -48,11 +49,34 @@ class NTR_fitter():
             self.settings[key] = value
 
         self.form_basic_data()
+        self._set_solver()
 
-        if settings['FIT_METHOD'] == 'mesh_gradient':
+    # ----------------------------------------------------------------------
+    def _set_solver(self):
+
+        if self.settings['FIT_SOLVER'] == 'mesh_gradient':
             self.solver = Gradient_Mesh_Solver(self)
-        elif settings['FIT_METHOD'] == 'lmfit':
+        elif self.settings['FIT_SOLVER'] == 'lm_fit':
             self.solver = LMFit_Solver(self)
+        elif self.settings['FIT_SOLVER'] == 'pysot':
+            self.solver = PySOT_Solver(self)
+
+    # ----------------------------------------------------------------------
+    def load_fit_set(self, file_name):
+
+        self._directory = os.path.split(file_name)[0]
+
+        with open(file_name, "rb") as input_file:
+            loaded_data = pickle.load(input_file)
+
+        for key in loaded_data.keys():
+            setattr(self, key, loaded_data[key])
+
+        self._set_solver()
+        self.solver.reset_fit()
+
+        return loaded_data['start_values']
+
     # ----------------------------------------------------------------------
     def form_basic_data(self):
 
@@ -124,7 +148,7 @@ class NTR_fitter():
             sim_data_plot.setData(self.main_data_set['data'][:, 0], shifts)
 
     # ----------------------------------------------------------------------
-    def dump_fit_set(self, file_name, fit_type=None, generate_data_set=True):
+    def dump_fit_set(self, file_name, fit_type=None, generate_data_set=True, start_values=None):
 
         if generate_data_set:
             self.main_data_set['fit_spectra_set'] = generate_fit_set(self.main_data_set['ref_spectra'],
@@ -136,24 +160,8 @@ class NTR_fitter():
             pickle.dump({'_sample_name': self._sample_name, 'fit_type': fit_type, 'sw': self.sw,
                          'main_data_set': self.main_data_set, 'num_depth_points': self.num_depth_points,
                          'settings': self.settings, 'structure': self.structure, 'angle_shift': self.angle_shift,
-                         'be_shift': self.be_shift, 't_val': self.t_val}, f, pickle.HIGHEST_PROTOCOL)
-
-    # ----------------------------------------------------------------------
-    def load_fit_set(self, file_name):
-
-        self._directory = os.path.split(file_name)[0]
-
-        with open(file_name, "rb") as input_file:
-            loaded_data = pickle.load(input_file)
-
-        for key in loaded_data.keys():
-            setattr(self, key, loaded_data[key])
-
-        if self.settings['FIT_METHOD'] == 'mesh_gradient':
-            self.solver = Gradient_Mesh_Solver(self)
-        elif self.settings['FIT_METHOD']  == 'lmfit':
-            self.solver = LMFit_Solver(self)
-        self.solver.reset_fit()
+                         'be_shift': self.be_shift, 't_val': self.t_val,
+                         'start_values': start_values}, f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------
     def save_fit_res(self):
@@ -235,5 +243,5 @@ if __name__ == "__main__":
             fitter.DO_PLOT = strtobool(options.do_plot)
         else:
             fitter.DO_PLOT = False
-        fitter.load_fit_set(options.data_set)
-        fitter.do_intensity_fit()
+        start_values = fitter.load_fit_set(options.data_set)
+        fitter.do_intensity_fit(start_values)

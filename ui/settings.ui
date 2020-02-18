@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>600</height>
+    <height>707</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -268,7 +268,7 @@
       </property>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="3" column="0" colspan="2">
-        <widget class="QFrame" name="frame">
+        <widget class="QFrame" name="f_mesh_gradient">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -375,6 +375,49 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="2">
+        <widget class="QFrame" name="f_lm_fit">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="cb_lm_fit_method"/>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="chk_lm_fit_monitor">
+            <property name="text">
+             <string>Monitor fit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Method</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Disply every X step:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="sb_lm_fit_monitor_step">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -390,7 +433,24 @@
        <item row="2" column="0">
         <widget class="QLabel" name="label_8">
          <property name="text">
-          <string>Method</string>
+          <string>Solver</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="cb_solver"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Ksi tolerance</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>t-stat value</string>
          </property>
         </widget>
        </item>
@@ -425,23 +485,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Ksi tolerance</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QComboBox" name="cb_fit_method"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_11">
-         <property name="text">
-          <string>t-stat value</string>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1">
         <widget class="QDoubleSpinBox" name="sp_t_value">
          <property name="minimum">
@@ -456,6 +499,17 @@
          <property name="value">
           <double>0.050000000000000</double>
          </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QFrame" name="f_pysot">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8"/>
         </widget>
        </item>
       </layout>

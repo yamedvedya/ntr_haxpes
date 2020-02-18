@@ -169,16 +169,16 @@ class Base_For_External_Solver():
         if self.parent.STAND_ALONE_MODE:
             if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
                 for ind in range(self.parent.num_depth_points):
-                    self.v_graphs_stack[ind].set_xdata(cycles)
-                    self.v_graphs_stack[ind].set_ydata(self.v_history[ind])
-                    self.v_graphs_stack[ind].relim()
-                    self.v_graphs_stack[ind].autoscale_view()
+                    self.v_graphs_stack[ind][1].set_xdata(cycles)
+                    self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
+                    self.v_graphs_stack[ind][0].relim()
+                    self.v_graphs_stack[ind][0].autoscale_view()
     
                 for ind in range(self.parent.num_depth_points - 2):
-                    self.d_graphs_stack[ind].set_xdata(cycles)
-                    self.d_graphs_stack[ind].setData(self.d_history[ind])
-                    self.d_graphs_stack[ind].relim()
-                    self.d_graphs_stack[ind].autoscale_view()
+                    self.d_graphs_stack[ind][1].set_xdata(cycles)
+                    self.d_graphs_stack[ind][1].setData(self.d_history[ind])
+                    self.d_graphs_stack[ind][0].relim()
+                    self.d_graphs_stack[ind][0].autoscale_view()
 
             self.potential_graph[1].set_ydata(last_best_potential)
             self.potential_graph[0].relim()
