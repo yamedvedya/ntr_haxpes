@@ -18,6 +18,7 @@ from queue import Empty as emptyQueue
 class NTR_Window(QtWidgets.QMainWindow):
 
     settings = {}
+    _model_widgets = []
 
     # ----------------------------------------------------------------------
     def __init__(self, options):

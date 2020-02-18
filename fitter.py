@@ -185,20 +185,24 @@ class NTR_fitter():
         self.solver.cycle = 0
         with open(file_name, 'rb') as fr:
             try:
+                settings_loaded = False
                 while True:
                     loaded_data = pickle.load(fr)
-                    if not self.solver.cycle:
+                    if not settings_loaded:
                         for key in loaded_data.keys():
                             setattr(self, key, loaded_data[key])
                         self.solver.reset_fit()
+                        settings_loaded = True
                     else:
                         self.solver.load_fit_res(loaded_data)
-                    self.solver.cycle += 1
             except EOFError:
                 pass
-        self.solver.cycle -= 2
-        self.gui.update_cycles(self.solver.cycle, self.solver.best_ksi[self.solver.cycle],
-                               self.solver.solution_history[self.solver.cycle - 1])
+        if hasattr(self.solver, "best_ksi"):
+            self.gui.update_cycles(self.solver.cycle, self.solver.best_ksi[self.solver.cycle],
+                                   self.solver.solution_history[self.solver.cycle - 1])
+        else:
+            self.gui.update_cycles(self.solver.cycle, 0,
+                                   self.solver.solution_history[self.solver.cycle - 1])
 
         return 'pot', self.main_data_set['model'], self.num_depth_points-2
 

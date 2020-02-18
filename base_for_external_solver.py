@@ -196,7 +196,9 @@ class Base_For_External_Solver():
                 for ind in range(self.parent.num_depth_points - 2):
                     self.d_graphs_stack[ind].setData(cycles, self.d_history[ind])
 
-            self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'], last_best_potential)
+            self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'],
+                                         last_best_potential)
+
             self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], last_best_shifts)
 
         if self.parent.STAND_ALONE_MODE:
@@ -220,7 +222,8 @@ class Base_For_External_Solver():
     # ----------------------------------------------------------------------
     def get_data_for_save(self):
 
-        return {'v_history': self.v_history,
+        return {'cycle': self.cycle,
+                'v_history': self.v_history,
                 'd_history': self.d_history,
                 'solution_history': self.solution_history,
                 'potential_graphs_history': self.potential_graphs_history,
@@ -233,9 +236,24 @@ class Base_For_External_Solver():
         if self.cycle > 0:
             ind = int(min(self.cycle, idx))
 
+        cycles = np.arange(self.cycle)
+
         if len(self.shifts_graphs_history) > 0:
             if self.parent.STAND_ALONE_MODE:
                 if self.parent.DO_PLOT:
+                    if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
+                        for ind in range(self.parent.num_depth_points):
+                            self.v_graphs_stack[ind][1].set_xdata(cycles)
+                            self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
+                            self.v_graphs_stack[ind][0].relim()
+                            self.v_graphs_stack[ind][0].autoscale_view()
+
+                        for ind in range(self.parent.num_depth_points - 2):
+                            self.d_graphs_stack[ind][1].set_xdata(cycles)
+                            self.d_graphs_stack[ind][1].setData(self.d_history[ind])
+                            self.d_graphs_stack[ind][0].relim()
+                            self.d_graphs_stack[ind][0].autoscale_view()
+
                     self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
                     self.potential_graph[0].relim()
                     self.potential_graph[0].autoscale_view()
@@ -245,6 +263,13 @@ class Base_For_External_Solver():
                     self.shifts_graph[0].autoscale_view()
 
             else:
+                if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
+                    for ind in range(self.parent.num_depth_points):
+                        self.v_graphs_stack[ind].setData(cycles, self.v_history[ind])
+
+                    for ind in range(self.parent.num_depth_points - 2):
+                        self.d_graphs_stack[ind].setData(cycles, self.d_history[ind])
+
                 self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'],
                                              self.potential_graphs_history[ind])
 
@@ -256,15 +281,5 @@ class Base_For_External_Solver():
     # ----------------------------------------------------------------------
     def load_fit_res(self, loaded_data):
 
-        self.best_ksi.append(np.min(loaded_data['mse']))
-        self.potential_graphs_history.append(loaded_data['last_best_potential'])
-        self.shifts_graphs_history.append(loaded_data['last_best_shifts'])
-        min_ind = np.argmin(loaded_data['mse'])
-        self.solution_history.append(
-            np.vstack((loaded_data['depthset'][:, min_ind], loaded_data['voltset'][:, min_ind])))
-
-        for point in range(self.parent.num_depth_points):
-            self.v_graphs_history[point].append(loaded_data['statistics']["V_points"][point])
-
-        for point in range(self.parent.num_depth_points - 2):
-            self.d_graphs_history[point].append(loaded_data['statistics']["D_points"][point])
+        for key in loaded_data.keys():
+            setattr(self, key, loaded_data[key])
