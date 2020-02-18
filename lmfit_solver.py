@@ -73,7 +73,7 @@ class LMFit_Solver(Base_For_External_Solver):
 
             self.parent.save_fit_res()
 
-            if self.parent.STAND_ALONE_MODE:
+            if self.parent.STAND_ALONE_MODE and self.parent.DO_PLOT:
                 plt.draw()
                 plt.gcf().canvas.flush_events()
 

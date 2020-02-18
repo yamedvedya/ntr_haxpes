@@ -187,13 +187,14 @@ class Gradient_Mesh_Solver():
         self.shifts_graphs_history.append(self.local_data_set['last_best_shifts'])
 
         if self.parent.STAND_ALONE_MODE:
-            self.potential_graph[1].set_ydata(self.local_data_set['last_best_potential'])
-            self.potential_graph[0].relim()
-            self.potential_graph[0].autoscale_view()
+            if self.parent.DO_PLOT:
+                self.potential_graph[1].set_ydata(self.local_data_set['last_best_potential'])
+                self.potential_graph[0].relim()
+                self.potential_graph[0].autoscale_view()
 
-            self.shifts_graph[1].set_ydata(self.local_data_set['last_best_shifts'])
-            self.shifts_graph[0].relim()
-            self.shifts_graph[0].autoscale_view()
+                self.shifts_graph[1].set_ydata(self.local_data_set['last_best_shifts'])
+                self.shifts_graph[0].relim()
+                self.shifts_graph[0].autoscale_view()
         else:
             self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
                                          self.local_data_set['last_best_potential'])
@@ -283,16 +284,17 @@ class Gradient_Mesh_Solver():
     # ----------------------------------------------------------------------
     def plot_statistics(self, graphs, var_set, statistics):
 
-            if self.parent.STAND_ALONE_MODE:
+        if self.parent.STAND_ALONE_MODE:
+            if self.parent.DO_PLOT:
                 graphs[1].set_xdata(var_set)
                 graphs[1].set_ydata(np.ones_like(var_set)*self.local_data_set['t_val'])
                 graphs[2].set_xdata(var_set)
                 graphs[2].set_ydata(statistics)
                 graphs[0].relim()
                 graphs[0].autoscale_view()
-            else:
-                graphs[0].setData(var_set, np.ones_like(var_set)*self.local_data_set['t_val'])
-                graphs[1].setData(var_set, statistics)
+        else:
+            graphs[0].setData(var_set, np.ones_like(var_set)*self.local_data_set['t_val'])
+            graphs[1].setData(var_set, statistics)
 
     # ----------------------------------------------------------------------
     def _analyse_variable_statistic(self, variable_set, data_cut, mode, limits):
@@ -467,8 +469,9 @@ class Gradient_Mesh_Solver():
             print('Cycle {} completed'.format(self.cycle))
 
             if self.parent.STAND_ALONE_MODE:
-                plt.draw()
-                plt.gcf().canvas.flush_events()
+                if self.parent.DO_PLOT:
+                    plt.draw()
+                    plt.gcf().canvas.flush_events()
             else:
                 self.parent.gui.update_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
 
@@ -485,27 +488,28 @@ class Gradient_Mesh_Solver():
 
         if len(self.shifts_graphs_history) > 0:
             if self.parent.STAND_ALONE_MODE:
-                self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
-                self.potential_graph[0].relim()
-                self.potential_graph[0].autoscale_view()
+                if self.parent.DO_PLOT:
+                    self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
+                    self.potential_graph[0].relim()
+                    self.potential_graph[0].autoscale_view()
 
-                self.shifts_graph[1].set_ydata(self.shifts_graphs_history[ind])
-                self.shifts_graph[0].relim()
-                self.shifts_graph[0].autoscale_view()
+                    self.shifts_graph[1].set_ydata(self.shifts_graphs_history[ind])
+                    self.shifts_graph[0].relim()
+                    self.shifts_graph[0].autoscale_view()
 
-                for point in range(self.parent.num_depth_points):
-                    self.v_graphs_stack[point][1].set_xdata(self.v_graphs_history[point][ind][0, :])
-                    self.v_graphs_stack[point][2].set_xdata(self.v_graphs_history[point][ind][0, :])
-                    self.v_graphs_stack[point][2].set_ydata(self.v_graphs_history[point][ind][1, :])
-                    self.v_graphs_stack[point][0].relim()
-                    self.v_graphs_stack[point][0].autoscale_view()
+                    for point in range(self.parent.num_depth_points):
+                        self.v_graphs_stack[point][1].set_xdata(self.v_graphs_history[point][ind][0, :])
+                        self.v_graphs_stack[point][2].set_xdata(self.v_graphs_history[point][ind][0, :])
+                        self.v_graphs_stack[point][2].set_ydata(self.v_graphs_history[point][ind][1, :])
+                        self.v_graphs_stack[point][0].relim()
+                        self.v_graphs_stack[point][0].autoscale_view()
 
-                for point in range(self.parent.num_depth_points-2):
-                    self.d_graphs_stack[point][1].set_xdata(self.d_graphs_history[point][ind][0, :])
-                    self.d_graphs_stack[point][2].set_xdata(self.d_graphs_history[point][ind][0, :])
-                    self.d_graphs_stack[point][2].set_ydata(self.d_graphs_history[point][ind][1, :])
-                    self.d_graphs_stack[point][0].relim()
-                    self.d_graphs_stack[point][0].autoscale_view()
+                    for point in range(self.parent.num_depth_points-2):
+                        self.d_graphs_stack[point][1].set_xdata(self.d_graphs_history[point][ind][0, :])
+                        self.d_graphs_stack[point][2].set_xdata(self.d_graphs_history[point][ind][0, :])
+                        self.d_graphs_stack[point][2].set_ydata(self.d_graphs_history[point][ind][1, :])
+                        self.d_graphs_stack[point][0].relim()
+                        self.d_graphs_stack[point][0].autoscale_view()
             else:
                 self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
                                              self.potential_graphs_history[ind])

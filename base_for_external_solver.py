@@ -46,7 +46,7 @@ class Base_For_External_Solver():
         self.potential_graph = None
         self.shifts_graph = None
 
-        if self.parent.STAND_ALONE_MODE:
+        if self.parent.STAND_ALONE_MODE and self.parent.DO_PLOT:
             if self.parent.settings['MONITOR_FIT'] and self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
                 self.fig, self.axes = plt.subplots(nrows=2, ncols=self.parent.num_depth_points)
                 self.plots = [[] for _ in range(self.parent.num_depth_points * 2)]
@@ -167,26 +167,27 @@ class Base_For_External_Solver():
         cycles = np.arange(self.cycle)
 
         if self.parent.STAND_ALONE_MODE:
-            if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                for ind in range(self.parent.num_depth_points):
-                    self.v_graphs_stack[ind][1].set_xdata(cycles)
-                    self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
-                    self.v_graphs_stack[ind][0].relim()
-                    self.v_graphs_stack[ind][0].autoscale_view()
-    
-                for ind in range(self.parent.num_depth_points - 2):
-                    self.d_graphs_stack[ind][1].set_xdata(cycles)
-                    self.d_graphs_stack[ind][1].setData(self.d_history[ind])
-                    self.d_graphs_stack[ind][0].relim()
-                    self.d_graphs_stack[ind][0].autoscale_view()
+            if self.parent.DO_PLOT:
+                if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
+                    for ind in range(self.parent.num_depth_points):
+                        self.v_graphs_stack[ind][1].set_xdata(cycles)
+                        self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
+                        self.v_graphs_stack[ind][0].relim()
+                        self.v_graphs_stack[ind][0].autoscale_view()
 
-            self.potential_graph[1].set_ydata(last_best_potential)
-            self.potential_graph[0].relim()
-            self.potential_graph[0].autoscale_view()
+                    for ind in range(self.parent.num_depth_points - 2):
+                        self.d_graphs_stack[ind][1].set_xdata(cycles)
+                        self.d_graphs_stack[ind][1].setData(self.d_history[ind])
+                        self.d_graphs_stack[ind][0].relim()
+                        self.d_graphs_stack[ind][0].autoscale_view()
 
-            self.shifts_graph[1].set_ydata(last_best_shifts)
-            self.shifts_graph[0].relim()
-            self.shifts_graph[0].autoscale_view()
+                self.potential_graph[1].set_ydata(last_best_potential)
+                self.potential_graph[0].relim()
+                self.potential_graph[0].autoscale_view()
+
+                self.shifts_graph[1].set_ydata(last_best_shifts)
+                self.shifts_graph[0].relim()
+                self.shifts_graph[0].autoscale_view()
         else:
             if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
                 for ind in range(self.parent.num_depth_points):
@@ -199,8 +200,9 @@ class Base_For_External_Solver():
             self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], last_best_shifts)
 
         if self.parent.STAND_ALONE_MODE:
-            plt.draw()
-            plt.gcf().canvas.flush_events()
+            if self.parent.DO_PLOT:
+                plt.draw()
+                plt.gcf().canvas.flush_events()
         else:
             self.parent.gui.update_cycles(self.cycle, 0,
                                           self.solution_history[self.cycle - 1])
@@ -233,13 +235,14 @@ class Base_For_External_Solver():
 
         if len(self.shifts_graphs_history) > 0:
             if self.parent.STAND_ALONE_MODE:
-                self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
-                self.potential_graph[0].relim()
-                self.potential_graph[0].autoscale_view()
+                if self.parent.DO_PLOT:
+                    self.potential_graph[1].set_ydata(self.potential_graphs_history[ind])
+                    self.potential_graph[0].relim()
+                    self.potential_graph[0].autoscale_view()
 
-                self.shifts_graph[1].set_ydata(self.shifts_graphs_history[ind])
-                self.shifts_graph[0].relim()
-                self.shifts_graph[0].autoscale_view()
+                    self.shifts_graph[1].set_ydata(self.shifts_graphs_history[ind])
+                    self.shifts_graph[0].relim()
+                    self.shifts_graph[0].autoscale_view()
 
             else:
                 self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'],
