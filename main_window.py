@@ -129,7 +129,9 @@ class NTR_Window(QtWidgets.QMainWindow):
 
                             if hasattr(options, 'model') and hasattr(options, 'n_points'):
                                 if self._set_initial_model(options.model, options.n_points):
-                                    self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'])
+                                    self.fitter.set_model(self._current_model['code'],
+                                                          self._current_model['num_deg_freedom'] +
+                                                          self._current_model['top_bottom_degree_of_freedom'])
 
 
     # ----------------------------------------------------------------------
@@ -267,7 +269,7 @@ class NTR_Window(QtWidgets.QMainWindow):
                     self._potential_model_selected()
 
                 if points:
-                    self._ui.p_sb_deg_freedom.setValue(int(points))
+                    self._ui.p_sb_deg_freedom.setValue(int(points) - self._current_model['top_bottom_degree_of_freedom'])
                     self._change_degrees()
 
                 return True
@@ -290,7 +292,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         start_depths = np.linspace(0, self.fitter.structure[1],
                                    self._current_model['num_deg_freedom'] +
-                                   self._current_model['default_degree_of_freedom'])
+                                   self._current_model['top_bottom_degree_of_freedom'])
 
         counter = 1
         for widget in self._model_widgets:
@@ -303,18 +305,17 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _potential_model_selected(self):
 
-        self._model_widgets = []
         selected_model = str(self._ui.p_cb_cmb_model.currentText())
         for model in self.list_of_models:
             if model['name'] == selected_model:
+                self._block_signals(True)
+                self._model_widgets = []
                 self._current_model = model
-                self._current_model['num_deg_freedom'] = 0
-                self._ui.p_sb_deg_freedom.setValue(0)
+                self._ui.p_sb_deg_freedom.setValue(self._current_model['num_deg_freedom'])
                 self._ui.p_sb_deg_freedom.setEnabled(not self._current_model['fixed_degrees_of_freedom'])
                 self._model_widgets.append(self._get_widget(model['default_widget']))
-
-        self._update_layouts(self._ui.p_wc_deg_freedom, self._model_widgets)
-        self._potential_model_edited()
+                self._change_degrees()
+                self._block_signals(False)
 
     # ----------------------------------------------------------------------
     def _get_widget(self, name, point_num=None):
@@ -367,7 +368,9 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         new_set = self._get_variable_values()
 
-        self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'])
+        self.fitter.set_model(self._current_model['code'], self._current_model['num_deg_freedom'] +
+                              self._current_model['top_bottom_degree_of_freedom'])
+
         self.fitter.sim_profile_shifts(new_set[:, 0], new_set[:, 1], self.g_ps_pot_plot,
                                        self.g_ps_shift_source_plot, self.g_ps_shift_sim_plot)
 

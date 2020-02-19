@@ -118,15 +118,13 @@ class NTR_fitter():
     # ----------------------------------------------------------------------
     def set_model(self, model, n_points):
         self.main_data_set['model'] = model
-        if self.main_data_set['model'] == 'sqrt':
-            self.num_depth_points = 4
-        else:
-            self.num_depth_points = int(n_points) + 2
+        self.num_depth_points = int(n_points)
 
     # ----------------------------------------------------------------------
     def sim_profile_shifts(self, d_set, v_set, pot_plot, source_dat_plot, sim_data_plot):
 
         d_set += self.structure[0]
+
         diff = np.diff(d_set)
         for ind in np.where(diff == 0):
             d_set[ind] += 1e-10
@@ -204,7 +202,7 @@ class NTR_fitter():
             self.gui.update_cycles(self.solver.cycle, 0,
                                    self.solver.solution_history[self.solver.cycle - 1])
 
-        return 'pot', self.main_data_set['model'], self.num_depth_points-2
+        return 'pot', self.main_data_set['model'], self.num_depth_points
 
     # ----------------------------------------------------------------------
     def do_intensity_fit(self, start_values):

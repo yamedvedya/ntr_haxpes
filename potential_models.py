@@ -6,15 +6,17 @@ def get_model_list():
     model_1 = {'name': 'Piecewise linear',
                'code': 'lin',
                'default_widget': 'top_bottom_potential',
-               'default_degree_of_freedom': 2,
+               'top_bottom_degree_of_freedom': 2,
                'fixed_degrees_of_freedom': False,
+               'num_deg_freedom': 0,
                'additional_widgets': ['breaking_point']}
 
     model_2 = {'name': 'Double square',
                'code': 'dbl_sqrt',
                'default_widget': 'top_bottom_potential',
-               'default_degree_of_freedom': 2,
+               'top_bottom_degree_of_freedom': 2,
                'fixed_degrees_of_freedom': True,
+               'num_deg_freedom': 2,
                'additional_widgets': ['breaking_point']}
 
     return [model_1, model_2]
