@@ -216,7 +216,10 @@ class Base_For_External_Solver():
         volt_set, depth_set = self._extract_sets(params)
         shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
 
-        return shifts - self.parent.main_data_set['data'][:, 2]
+        if shifts:
+            return shifts - self.parent.main_data_set['data'][:, 2]
+        else:
+            return 100 - self.parent.main_data_set['data'][:, 2]
 
     # ----------------------------------------------------------------------
     def get_data_for_save(self):

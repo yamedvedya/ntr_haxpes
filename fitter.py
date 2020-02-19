@@ -211,6 +211,9 @@ class NTR_fitter():
 
         self.fit_in_progress = True
 
+        for pair in start_values:
+            pair[0] += self.structure[0]
+
         if self.STAND_ALONE_MODE and self.DO_PLOT:
             self.sidx = Slider(plt.axes([0.1, 0.02, 0.8, 0.03]), 'Cycle#', 0, 1, valinit=1, valstep=1)
             self.sidx.on_changed(self.solver.show_results)

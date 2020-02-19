@@ -288,6 +288,17 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self._update_layouts(self._ui.p_wc_deg_freedom, self._model_widgets)
 
+        start_depths = np.linspace(0, self.fitter.structure[1],
+                                   self._current_model['num_deg_freedom'] +
+                                   self._current_model['default_degree_of_freedom'])
+
+        counter = 1
+        for widget in self._model_widgets:
+            if isinstance(widget, BreakingPoint):
+                raw_ans = widget.getValues()
+                widget.set_values((start_depths[counter], raw_ans[0][1]))
+                counter = counter + 1
+
         self._potential_model_edited()
     # ----------------------------------------------------------------------
     def _potential_model_selected(self):
