@@ -111,7 +111,6 @@ class Base_For_External_Solver():
                 self.axes[1, ind].set_title('D point {}'.format(ind + 1))
                 self.axes[1, ind].set_xlabel('Cycle, N')
                 self.axes[1, ind].set_ylabel('Depth, nm')
-                self.axes[1, ind].set_ylim([0, 3])
                 self.d_graphs_stack.append([self.axes[1, ind],
                                             self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
                                                                    np.ones(self.parent.settings['D_MESH']), 'g--')[0]])
@@ -152,7 +151,7 @@ class Base_For_External_Solver():
             self.v_history[ind].append(volt_set[ind])
 
         for ind in range(self.parent.num_depth_points - 2):
-            self.d_history[ind].append(volt_set[ind + 1])
+            self.d_history[ind].append(depth_set[ind + 1])
 
         self.solution_history.append(np.vstack((depth_set, volt_set)))
 
@@ -177,7 +176,7 @@ class Base_For_External_Solver():
 
                     for ind in range(self.parent.num_depth_points - 2):
                         self.d_graphs_stack[ind][1].set_xdata(cycles)
-                        self.d_graphs_stack[ind][1].setData(self.d_history[ind])
+                        self.d_graphs_stack[ind][1].set_ydata(self.d_history[ind])
                         self.d_graphs_stack[ind][0].relim()
                         self.d_graphs_stack[ind][0].autoscale_view()
 
