@@ -84,11 +84,11 @@ class NTR_fitter():
         self.main_data_set['SUB_LAYERS'] = self.settings['SUB_LAYERS']
         self.main_data_set['BE_STEP'] = self.settings['BE_STEP']
 
-        self.main_data_set['ref_spectra'] = syn_spectra(-(self.settings['VOLT_MAX'] + self.settings['SIM_SPECTRA_WIDTH']),
-                                                        self.settings['VOLT_MAX'] + self.settings['SIM_SPECTRA_WIDTH'],
+        ref_spectra_width = 1.1*(self.settings['VOLT_MAX'] + self.settings['SIM_SPECTRA_WIDTH'])
+
+        self.main_data_set['ref_spectra'] = syn_spectra(-ref_spectra_width, ref_spectra_width,
                                                         self.settings['BE_STEP'], self.settings['G'], self.settings['L'])
-        self.main_data_set['ref_spectra_points'] = int((self.settings['VOLT_MAX'] +
-                                                        self.settings['SIM_SPECTRA_WIDTH'])/self.settings['BE_STEP'])
+        self.main_data_set['ref_spectra_points'] = int(ref_spectra_width/self.settings['BE_STEP'])
 
         self.main_data_set['sum_spectra_point'] = int(self.settings['SIM_SPECTRA_WIDTH']/self.settings['BE_STEP'])
         self.main_data_set['sum_spectra_energy'] = np.linspace(-self.settings['SIM_SPECTRA_WIDTH'],
