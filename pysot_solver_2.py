@@ -26,6 +26,7 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         self.ub, self.lb = self._evaluate_borders()
         self.int_var = np.array([])
         self.cont_var = np.arange(0, self.dim)
+        self.results = []
 
     def _evaluate_borders(self):
         """
@@ -34,8 +35,8 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         max_voltage = self.parent.settings['VOLT_MAX'] - 0.01
         min_voltage = -max_voltage
-        max_depth = np.max(self.parent.start_values[1])
-        min_depth = np.min(self.parent.start_values[1])
+        max_depth = self.parent.structure[1]
+        min_depth = self.parent.structure[0]
         n_intermediate_points = int((self.dim - 2) / 2)
         ub = np.empty(self.dim)
         lb = np.empty(self.dim)
@@ -50,21 +51,31 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         Format x into volt_set and depth_set
 
         :param x: numpy array [V_left, V1, ..., Vn, V_right, x1, ..., xn]
-        :return: volt_set and depth_set
+        :return: tuple of numpy arrays (volt_set, depth_set)
         """
         n_intermediate_points = int((self.dim - 2) / 2)
         volt_set = x[0:(n_intermediate_points + 2)]
+        left_border = self.parent.structure[0] + 1e-10
+        right_border = self.parent.structure[1] - 1e-10
         borders = self.parent.start_values[1]
-        depth_set = np.concatenate(([borders[0]], x[(n_intermediate_points + 2):], [borders[1]]))
+        depth_set = np.concatenate(([left_border], x[(n_intermediate_points + 2):], [right_border]))
 
         return volt_set, depth_set
 
     def eval(self, x):
+        """
+        Returns the value of the objective function at given point (x)
+        :param x: numpy array [V_left, V1, ..., Vn, V_right, x1, ..., xn]
+        :return: float
+        """
         super().__check_input__(x)
         volt_set, depth_set = self._extract_sets(x)
         shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
-        khi = np.sum((shifts - self.parent.main_data_set['data'][:, 2]) ** 2)
-        return khi
+        if shifts is None:
+            obj_value = np.array(100)  # костыль!
+        else:
+            obj_value = np.sum((shifts - self.parent.main_data_set['data'][:, 2]) ** 2)
+        return obj_value
 
 
 def main_worker(objfunction):
@@ -88,12 +99,17 @@ def main_master(opt_problem, n_workers, max_evals):
 
     print('Best value found: {0}'.format(result.value))
     print('Best solution found: {0}\n'.format(
-        np.array_str(result.params[0], max_line_width=np.inf,
-                     precision=5, suppress_small=True)))
+        np.array_str(result.params[0], max_line_width=np.inf)))
     print(stop - start)
 
 
 def mpi_execution(fitter, max_evals):
+    """
+    Run in multiple threads. Master thread uses main_master() function, others use main_worker() function
+    Requires launch with mpiexec! Does not work in single thread!
+    :param fitter: NTR_Fitter object with loaded .set
+    :param max_evals: max number of evaluations
+    """
     opt_problem = HAXPESOptimizationProblem(fitter)
 
     comm = MPI.COMM_WORLD
@@ -107,6 +123,11 @@ def mpi_execution(fitter, max_evals):
 
 
 def single_thread_execution(fitter, max_evals):
+    """
+    Run in a single thread
+    :param fitter: NTR_Fitter object with loaded .set
+    :param max_evals: max number of evaluations
+    """
     opt_problem = HAXPESOptimizationProblem(fitter)
     exp_design = SymmetricLatinHypercube(dim=opt_problem.dim, num_pts=2 * (opt_problem.dim + 1))
     srgt_model = SurrogateUnitBox(RBFInterpolant(dim=opt_problem.dim, tail=LinearTail(dim=opt_problem.dim)),
@@ -124,8 +145,7 @@ def single_thread_execution(fitter, max_evals):
 
     print('Best value found: {0}'.format(result.value))
     print('Best solution found: {0}\n'.format(
-        np.array_str(result.params[0], max_line_width=np.inf,
-                     precision=5, suppress_small=True)))
+        np.array_str(result.params[0], max_line_width=np.inf)))
     print(stop - start)
 
 
@@ -141,8 +161,8 @@ if __name__ == '__main__':
 
     fitter = NTR_fitter()
     start_values = fitter.load_fit_set(options.data_set)
-    max_evals = 1000
-    single_thread_execution(fitter, max_evals)
-
+    max_evals = 10000
+    mpi_execution(fitter, max_evals)
+    # single_thread_execution(fitter, max_evals)
 
 
