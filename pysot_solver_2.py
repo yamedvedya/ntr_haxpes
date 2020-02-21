@@ -84,7 +84,7 @@ def main_worker(objfunction):
 
 def main_master(opt_problem, n_workers, max_evals):
 
-    exp_design = SymmetricLatinHypercube(dim=opt_problem.dim, num_pts=2 * (opt_problem.dim + 1))
+    exp_design = SymmetricLatinHypercube(dim=opt_problem.dim, num_pts=2 * (opt_problem.dim + n_workers))
     srgt_model = SurrogateUnitBox(RBFInterpolant(dim=opt_problem.dim, tail=LinearTail(dim=opt_problem.dim)),
                                   lb=opt_problem.lb, ub=opt_problem.ub)
 
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
     fitter = NTR_fitter()
     start_values = fitter.load_fit_set(options.data_set)
-    max_evals = 10000
+    max_evals = 100
     mpi_execution(fitter, max_evals)
     # single_thread_execution(fitter, max_evals)
 
