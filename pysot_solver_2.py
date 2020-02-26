@@ -35,7 +35,7 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         max_voltage = self.parent.settings['VOLT_MAX'] - 0.01
         min_voltage = -max_voltage
-        max_depth = self.parent.structure[1]
+        max_depth = self.parent.structure[0] + self.parent.structure[1]
         min_depth = self.parent.structure[0]
         n_intermediate_points = int((self.dim - 2) / 2)
         ub = np.empty(self.dim)
@@ -55,9 +55,8 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         n_intermediate_points = int((self.dim - 2) / 2)
         volt_set = x[0:(n_intermediate_points + 2)]
-        left_border = self.parent.structure[0] + 1e-10
-        right_border = self.parent.structure[1] - 1e-10
-        borders = self.parent.start_values[1]
+        left_border = self.parent.structure[0]
+        right_border = self.parent.structure[0] + self.parent.structure[1]
         depth_set = np.concatenate(([left_border], x[(n_intermediate_points + 2):], [right_border]))
 
         return volt_set, depth_set
@@ -162,7 +161,7 @@ if __name__ == '__main__':
     fitter = NTR_fitter()
     start_values = fitter.load_fit_set(options.data_set)
     max_evals = 100
-    mpi_execution(fitter, max_evals)
-    # single_thread_execution(fitter, max_evals)
+    #mpi_execution(fitter, max_evals)
+    single_thread_execution(fitter, max_evals)
 
 
