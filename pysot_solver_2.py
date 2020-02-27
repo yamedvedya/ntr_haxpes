@@ -143,8 +143,9 @@ def single_thread_execution(fitter, max_evals):
     stop = time.time()
 
     print('Best value found: {0}'.format(result.value))
-    print('Best solution found: {0}\n'.format(
-        np.array_str(result.params[0], max_line_width=np.inf)))
+    print('Best solution found:')
+    print('Voltages: {0}'.format(opt_problem._extract_sets(result.params[0])[0]))
+    print('Depth: {0}'.format(opt_problem._extract_sets(result.params[0])[1] - opt_problem._extract_sets(result.params[0])[1][0]))
     print(stop - start)
 
 
@@ -160,7 +161,7 @@ if __name__ == '__main__':
 
     fitter = NTR_fitter()
     start_values = fitter.load_fit_set(options.data_set)
-    max_evals = 100
+    max_evals = 10
     #mpi_execution(fitter, max_evals)
     single_thread_execution(fitter, max_evals)
 
