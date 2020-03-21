@@ -6,27 +6,27 @@ def get_model_list():
     model_1 = {'name': 'Piecewise linear',
                'code': 'lin',
                'default_widget': 'top_bottom_potential',
-               'top_bottom_degree_of_freedom': 2,
-               'fixed_degrees_of_freedom': False,
-               'num_deg_freedom': 0,
+               'only_voltage_dof': 2,
+               'fixed_depth_dof': False,
+               'num_depth_dof': 0,
                'additional_widgets': ['breaking_point']}
 
     model_2 = {'name': 'Double square',
                'code': 'dbl_sqrt',
                'default_widget': 'top_bottom_potential',
-               'top_bottom_degree_of_freedom': 2,
-               'fixed_degrees_of_freedom': True,
-               'num_deg_freedom': 2,
+               'only_voltage_dof': 2,
+               'fixed_depth_dof': True,
+               'num_depth_dof': 2,
                'additional_widgets': ['breaking_point']}
 
     return [model_1, model_2]
 # ----------------------------------------------------------------------
 def calculatePotential(depth_set, volt_set, fit_depth_points, model):
 
-    if model == 'lin':
+    if model['code'] == 'lin':
         return np.interp(fit_depth_points, depth_set, volt_set)
 
-    elif model == 'dbl_sqrt':
+    elif model['code'] == 'dbl_sqrt':
         volts = np.zeros_like(fit_depth_points)
 
         ind_top = np.argmin(np.abs(fit_depth_points-depth_set[1]))

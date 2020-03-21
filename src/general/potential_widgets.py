@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
 from PyQt5 import QtWidgets, QtCore
-from widgets.breaking_point_ui import Ui_breaking_point
-from widgets.top_botom_potential_ui import Ui_top_bottom_potential
+from src.widgets.breaking_point_ui import Ui_breaking_point
+from src.widgets.top_botom_potential_ui import Ui_top_bottom_potential
 
 
 # ----------------------------------------------------------------------
@@ -21,7 +17,7 @@ class TopBottomPotential(QtWidgets.QWidget):
         self._ui.setupUi(self)
 
         self.connect_actions()
-        self.max_depth = max_depth
+        self.max_depth = max_depth*1e-10
         self.max_voltage = max_voltage - 0.01
         self._ui.sb_top_potential.maximum = max_voltage - 0.01
         self._ui.sb_top_potential.minimum = -max_voltage + 0.01
@@ -81,6 +77,9 @@ class TopBottomPotential(QtWidgets.QWidget):
 
         self.blockSignals(False)
 
+    # ----------------------------------------------------------------------
+    def change_layer_thichness(self, new_value):
+        self.max_depth = new_value*1e-10
 # ----------------------------------------------------------------------
 class BreakingPoint(QtWidgets.QWidget):
 
@@ -94,12 +93,12 @@ class BreakingPoint(QtWidgets.QWidget):
         self._ui.setupUi(self)
         self._ui.l_point_name.setText('Point {}'.format(point_num))
 
-        self.max_position = max_depth*1e9 - 0.01
+        self.max_position = (max_depth-1) * 0.1
         self.max_voltage = max_voltage - 0.01
-        self._ui.sb_point_position.setValue(point_pos*1e9)
+        self._ui.sb_point_position.setValue(point_pos/10)
         self._ui.sl_point_position.setValue(1e2*point_pos/max_depth)
 
-        self._ui.sb_point_position.maximum = max_depth - 0.01e-9
+        self._ui.sb_point_position.maximum = (max_depth - 1) * 0.1
         self._ui.sb_point_potential.maximum = max_voltage - 0.01
         self._ui.sb_point_potential.minimum = -max_voltage + 0.01
         self.connect_actions()
@@ -155,10 +154,14 @@ class BreakingPoint(QtWidgets.QWidget):
 
         self.blockSignals(True)
 
-        self._ui.sb_point_position.setValue(values[0]*1e9)
-        self._ui.sl_point_position.setValue(int(100 * values[0] * 1e9 / self.max_position))
+        self._ui.sb_point_position.setValue(values[0]/10)
+        self._ui.sl_point_position.setValue(int(10 * values[0] / self.max_position))
 
         self._ui.sb_point_potential.setValue(values[1])
         self._ui.sl_point_potential.setValue(int(50 * (1 + values[1] / self.max_voltage)))
 
         self.blockSignals(False)
+
+    # ----------------------------------------------------------------------
+    def change_layer_thichness(self, new_value):
+        self.max_depth = new_value*1e-10 - 0.01

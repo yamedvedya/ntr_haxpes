@@ -1,5 +1,5 @@
-from subfunctions import *
-from potential_models import calculatePotential
+from src.ntr_data_fitting.subfunctions import *
+from src.ntr_data_fitting.potential_models import calculatePotential
 import matplotlib.pyplot as plt
 import ctypes
 from scipy import stats
@@ -47,8 +47,9 @@ class Gradient_Mesh_Solver():
 
         self.solution_history = []
 
-        self.v_graphs_history = [[] for _ in range(self.parent.num_depth_points)]
-        self.d_graphs_history = [[] for _ in range(self.parent.num_depth_points - 2)]
+        self.v_graphs_history = [[] for _ in range(self.parent.potential_model['num_depth_dof'] +
+                                                   self.parent.potential_model['only_voltage_dof'])]
+        self.d_graphs_history = [[] for _ in range(self.parent.potential_model['num_depth_dof'])]
         self.potential_graphs_history = []
         self.shifts_graphs_history = []
 
@@ -58,12 +59,18 @@ class Gradient_Mesh_Solver():
         self.shifts_graph = None
 
         if self.parent.STAND_ALONE_MODE and self.parent.DO_PLOT:
-            self.fig, self.axes = plt.subplots(nrows=2, ncols=self.parent.num_depth_points)
-            self.plots = [[] for _ in range(self.parent.num_depth_points * 2)]
+            total_num_plots = self.parent.potential_model['only_voltage_dof'] + \
+                              2 * self.parent.potential_model['num_depth_dof'] + 2
+            self.num_colums = total_num_plots // 2
+
+            self.fig, self.axes = plt.subplots(nrows=2, ncols=self.num_colums)
+            self.plots = [[] for _ in range(total_num_plots)]
             plt.ion()
 
     # ----------------------------------------------------------------------
     def _get_fit_set(self):
+        num_dof = self.parent.potential_model['num_depth_dof'] + self.parent.potential_model['only_voltage_dof']
+
         fit_points = 1
 
         for v_points in self.v_set:
@@ -73,14 +80,14 @@ class Gradient_Mesh_Solver():
             fit_points *= len(d_points)
 
         self.local_data_set = {'fit_points': fit_points,
-                    'depthset': np.zeros((self.parent.num_depth_points, fit_points)),
-                    'voltset': np.zeros((self.parent.num_depth_points, fit_points)),
+                    'depthset': np.zeros((num_dof, fit_points)),
+                    'voltset': np.zeros((num_dof, fit_points)),
                     'mse': np.zeros(fit_points),
-                    'last_best_shifts': np.zeros_like(self.parent.main_data_set['data'][:, 2]),
-                    'last_intensity': np.zeros_like(self.parent.main_data_set['data'][:, 1]),
-                    'last_best_potential': np.zeros_like(self.parent.num_depth_points),
+                    'last_best_shifts': np.zeros_like(self.parent.data_set_for_fitting['spectroscopic_data'][:, 2]),
+                    'last_intensity': np.zeros_like(self.parent.data_set_for_fitting['spectroscopic_data'][:, 1]),
+                    'last_best_potential': np.zeros_like(num_dof),
                     'statistics': {},
-                    't_val': stats.t.ppf(1 - self.parent.settings['T'], self.parent.main_data_set['data'].shape[0])}
+                    't_val': stats.t.ppf(1 - self.parent.settings['T'], self.parent.data_set_for_fitting['spectroscopic_data'].shape[0])}
 
         self._fill_counter = 0
         self._fill_voltages([], self.v_set, self.d_set)
@@ -88,7 +95,7 @@ class Gradient_Mesh_Solver():
     # ----------------------------------------------------------------------
     def set_external_graphs(self, graphs_layout):
 
-        for ind in range(self.parent.num_depth_points):
+        for ind in range(self.parent.potential_model['num_depth_dof'] + self.parent.potential_model['only_voltage_dof']):
             plot_axes = graphs_layout.addPlot(title="V_{}".format(ind), row=0, col=ind)
             plot_axes.setLabel('bottom', 'BE, eV')
             plot_axes.setLabel('left', 't statistics')
@@ -101,7 +108,7 @@ class Gradient_Mesh_Solver():
                                                                         **lookandfeel.T_STAT_STYLE)])
 
         ind = 0
-        for ind in range(self.parent.num_depth_points - 2):
+        for ind in range(self.parent.potential_model['num_depth_dof']):
             plot_axes = graphs_layout.addPlot(title="D_{}".format(ind), row=1, col=ind)
             plot_axes.setLabel('bottom', 'Depth, nm')
             plot_axes.setLabel('left', 't statistics')
@@ -113,26 +120,30 @@ class Gradient_Mesh_Solver():
                                                                         np.zeros(self.parent.settings['D_MESH']),
                                                                         **lookandfeel.T_STAT_STYLE)])
 
-        if self.parent.num_depth_points - 2:
+        if self.parent.potential_model['num_depth_dof']:
             start_ind = ind + 1
         else:
             start_ind = 0
 
         shifts_plot = graphs_layout.addPlot(title="Shifts", row=1, col=start_ind + 1)
-        shifts_plot.plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
-                                 **lookandfeel.CURRENT_SOURCE_SHIFT)
-        self.shifts_graph = shifts_plot.plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
-                                                     **lookandfeel.CURRENT_SIM_SHIFT)
+        shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                         self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
+                         **lookandfeel.CURRENT_SOURCE_SHIFT)
+
+        self.shifts_graph = shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                             self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
+                                             **lookandfeel.CURRENT_SIM_SHIFT)
 
         potential_plot = graphs_layout.addPlot(title="Potential", row=1, col=start_ind)
-        self.potential_graph = potential_plot.plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
-                                                           np.zeros_like(self.parent.main_data_set['fit_depth_points']),
-                                                           **lookandfeel.CURRENT_POTENTIAL_STYLE)
+        self.potential_graph = potential_plot.plot((self.parent.data_set_for_fitting['fit_depth_points']
+                                                    - self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
+                                                    np.zeros_like(self.parent.data_set_for_fitting['fit_depth_points']),
+                                                    **lookandfeel.CURRENT_POTENTIAL_STYLE)
 
     # ----------------------------------------------------------------------
     def prepare_stand_alone_plots(self):
 
-        for ind in range(self.parent.num_depth_points):
+        for ind in range(self.parent.potential_model['num_depth_dof'] + self.parent.potential_model['only_voltage_dof']):
             self.axes[0, ind].set_title('V point {}'.format(ind + 1))
             self.axes[0, ind].set_xlabel('BE, eV')
             self.axes[0, ind].set_ylabel('t statistics')
@@ -143,7 +154,7 @@ class Gradient_Mesh_Solver():
                                         self.axes[0, ind].plot(range(self.parent.settings['V_MESH']),
                                                                np.zeros(self.parent.settings['V_MESH']), '*-')[0]])
 
-        for ind in range(self.parent.num_depth_points - 2):
+        for ind in range(self.parent.potential_model['num_depth_dof']):
             self.axes[1, ind].set_title('D point {}'.format(ind + 1))
             self.axes[1, ind].set_xlabel('Depth, nm')
             self.axes[1, ind].set_ylabel('t statistics')
@@ -154,14 +165,15 @@ class Gradient_Mesh_Solver():
                                         self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
                                                                np.zeros(self.parent.settings['D_MESH']), '*-')[0]])
 
-        self.axes[1, self.parent.num_depth_points - 1].plot(self.parent.main_data_set['data'][:, 0],
-                                                            self.parent.main_data_set['data'][:, 2], 'x')
-        self.shifts_graph = [self.axes[1, self.parent.num_depth_points - 1],
-                             self.axes[1, self.parent.num_depth_points - 1].plot(self.parent.main_data_set['data'][:, 0],
-                                                                          self.parent.main_data_set['data'][:, 2], '-')[0]]
-        self.potential_graph = [self.axes[1, self.parent.num_depth_points - 2],
-                                self.axes[1, self.parent.num_depth_points - 2].plot((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
-                                                                                    np.zeros_like(self.parent.main_data_set['fit_depth_points']))[0]]
+        self.axes[1, self.num_colums - 1].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                                            self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], 'x')
+        self.shifts_graph = [self.axes[1, self.num_colums - 1],
+                             self.axes[1, self.num_colums - 1].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                                                    self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], '-')[0]]
+        self.potential_graph = [self.axes[1, self.num_colums - 2],
+                                self.axes[1, self.num_colums - 2].plot((self.parent.data_set_for_fitting['fit_depth_points']
+                                                                        - self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
+                                                                        np.zeros_like(self.parent.data_set_for_fitting['fit_depth_points']))[0]]
 
         plt.draw()
         plt.gcf().canvas.flush_events()
@@ -178,12 +190,14 @@ class Gradient_Mesh_Solver():
         self.solution_history.append(np.vstack((depth_set, volt_set)))
 
         self.local_data_set['last_best_potential'] = calculatePotential(depth_set, volt_set,
-                                                                        self.parent.main_data_set['fit_depth_points'],
-                                                                        self.parent.main_data_set['model'])
+                                                                        self.parent.data_set_for_fitting['fit_depth_points'],
+                                                                        self.parent.data_set_for_fitting['model'])
 
         self.potential_graphs_history.append(self.local_data_set['last_best_potential'])
 
-        self.local_data_set['last_best_shifts'], self.local_data_set['last_intensity'] = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+        self.local_data_set['last_best_shifts'], self.local_data_set['last_intensity'] = \
+            get_shifts(self.parent.data_set_for_fitting, depth_set, volt_set)
+
         self.shifts_graphs_history.append(self.local_data_set['last_best_shifts'])
 
         if self.parent.STAND_ALONE_MODE:
@@ -196,24 +210,36 @@ class Gradient_Mesh_Solver():
                 self.shifts_graph[0].relim()
                 self.shifts_graph[0].autoscale_view()
         else:
-            self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+            self.potential_graph.setData((self.parent.data_set_for_fitting['fit_depth_points'] -
+                                          self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
                                          self.local_data_set['last_best_potential'])
-            self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], self.local_data_set['last_best_shifts'])
+            self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0], self.local_data_set['last_best_shifts'])
 
     # ----------------------------------------------------------------------
     def _generate_start_set(self, start_values):
 
-        self.v_set = [np.zeros(self.parent.settings['V_MESH']) for _ in range(self.parent.num_depth_points)]
+        self.v_set = [np.zeros(self.parent.settings['V_MESH'])
+                      for _ in range(self.parent.potential_model['num_depth_dof'] +
+                      self.parent.potential_model['only_voltage_dof'])]
 
         v_half_steps = int(np.floor(self.parent.settings['V_MESH'] / 2))
 
-        for point in range(self.parent.num_depth_points):
-            self.v_set[point] = start_values[point][1] + np.linspace(-self.parent.settings['V_STEP'] * v_half_steps, self.parent.settings['V_STEP'] * v_half_steps,
-                                            self.parent.settings['V_MESH'])
+        for point in range(self.parent.potential_model['num_depth_dof'] +
+                           self.parent.potential_model['only_voltage_dof']):
 
-        for point in range(self.parent.num_depth_points - 2):
-            self.d_set[point] = np.linspace(start_values[point][0], start_values[point + 2][0],
-                                            self.parent.settings['D_MESH'] + 2)[1:-1]
+            self.v_set[point] = start_values[point][1] + np.linspace(-self.parent.settings['V_STEP'] * v_half_steps,
+                                                                     self.parent.settings['V_STEP'] * v_half_steps,
+                                                                     self.parent.settings['V_MESH'])
+
+        self.d_set = [np.zeros(self.parent.settings['D_MESH'])
+                      for _ in range(self.parent.potential_model['num_depth_dof'])]
+
+        d_half_steps = int(np.floor(self.parent.settings['D_MESH'] / 2))
+
+        for point in range(self.parent.potential_model['num_depth_dof']):
+            self.d_set[point] = start_values[point + 1][0] + np.linspace(-self.parent.settings['D_STEP'] * d_half_steps,
+                                                                     self.parent.settings['D_STEP'] * d_half_steps,
+                                                                     self.parent.settings['D_MESH'])
 
     # ----------------------------------------------------------------------
     def _fill_voltages(self, selected_v, last_v_set, d_set):
@@ -231,13 +257,16 @@ class Gradient_Mesh_Solver():
                 self._fill_depth(selected_v, np.append(selected_d, d), last_d_set[1:])
         elif len(last_d_set) == 1:
             for d in last_d_set[0]:
-                self.local_data_set['depthset'][:, self._fill_counter] = np.append(self.parent.structure[0],
-                                                                                   np.append(np.append(selected_d, d),
-                                                                                  self.parent.structure[0] + self.parent.structure[1]))
+                self.local_data_set['depthset'][:, self._fill_counter] = \
+                    np.append(self.parent.data_set_for_fitting['fit_depth_points'][0],
+                              np.append(np.append(selected_d, d), self.parent.data_set_for_fitting['fit_depth_points'][-1]))
+
                 self.local_data_set['voltset'][:, self._fill_counter] = selected_v
                 self._fill_counter += 1
+
         else:
-            self.local_data_set['depthset'][:, self._fill_counter] = [self.parent.structure[0], self.parent.structure[0] + self.parent.structure[1]]
+            self.local_data_set['depthset'][:, self._fill_counter] = [self.parent.data_set_for_fitting['fit_depth_points'][0],
+                                                                      self.parent.data_set_for_fitting['fit_depth_points'][-1]]
             self.local_data_set['voltset'][:, self._fill_counter] = selected_v
             self._fill_counter += 1
 
@@ -246,10 +275,14 @@ class Gradient_Mesh_Solver():
         solution_found = True
         self.best_ksi.append(np.min(self.local_data_set['mse']))
 
-        self.local_data_set['statistics'] = {"V_points": [[] for _ in range(self.parent.num_depth_points)],
-                                  "D_points": [[] for _ in range(self.parent.num_depth_points - 2)]}
+        self.local_data_set['statistics'] = {"V_points":
+                                                 [[] for _ in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof'])],
+                                            "D_points":
+                                                [[] for _ in range(self.parent.potential_model['num_depth_dof'])]}
 
-        for point in range(self.parent.num_depth_points):
+        for point in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof']):
             new_set, statistics, parameter_solution_found = \
                 self._analyse_variable_statistic(self.v_set[point], self.local_data_set['voltset'][point, :],
                                                  'volt_point', [-self.parent.settings['VOLT_MAX'],
@@ -263,14 +296,15 @@ class Gradient_Mesh_Solver():
             self.v_set[point] = new_set
             solution_found *= parameter_solution_found
 
-        for point in range(self.parent.num_depth_points - 2):
+        for point in range(self.parent.potential_model['num_depth_dof']):
             new_set, statistics, parameter_solution_found = \
                 self._analyse_variable_statistic(self.d_set[point], self.local_data_set['depthset'][point + 1, :],
-                                                 'depth_point', [self.parent.structure[0], self.parent.structure[0] +
-                                                                                             self.parent.structure[1]])
+                                                 'depth_point', [self.parent.data_set_for_fitting['fit_depth_points'][0],
+                                                 self.parent.data_set_for_fitting['fit_depth_points'][-1]])
 
             if self.parent.DO_PLOT:
-                self.plot_statistics(self.d_graphs_stack[point], self.d_set[point] - self.parent.structure[0], statistics)
+                self.plot_statistics(self.d_graphs_stack[point], self.d_set[point] -
+                                     self.parent.data_set_for_fitting['fit_depth_points'][0], statistics)
 
             full_statistics = np.vstack((self.d_set[point], statistics))
             self.local_data_set['statistics']["D_points"][point] = full_statistics
@@ -308,7 +342,7 @@ class Gradient_Mesh_Solver():
             x_shift = 0.0
         else:
             mesh = self.parent.settings['D_MESH']
-            step = self.parent.settings['D_STEP']
+            step = self.parent.settings['D_STEP']*1e-9
             x_shift = limits[0]
 
         limits[0] += step
@@ -320,7 +354,7 @@ class Gradient_Mesh_Solver():
             ksiset[v_point, 1] = np.min(self.local_data_set['mse'][all_inds])
 
         t_statistics = np.sqrt(ksiset[:, 1] - self.best_ksi[-1]) / np.sqrt(
-            self.best_ksi[-1] / self.parent.main_data_set['data'].shape[0])
+            self.best_ksi[-1] / self.parent.data_set_for_fitting['spectroscopic_data'].shape[0])
 
         if self.best_ksi[-1]*(1 + self.parent.settings['KSI_TOLLERANCE']) < self.best_ksi[-2]:
             half_steps = int(np.floor(mesh / 2))
@@ -367,7 +401,7 @@ class Gradient_Mesh_Solver():
         return np.array(calculated_set), np.array(t_statistics), solution_found
 
     # ----------------------------------------------------------------------
-    def _mse_calculator(self, main_data_set, local_data_set, tasks_queue, result_array):
+    def _mse_calculator(self, data_set_for_fitting, local_data_set, tasks_queue, result_array):
 
         while True:
             local_job_range = tasks_queue.get()
@@ -375,14 +409,14 @@ class Gradient_Mesh_Solver():
                 break
 
             # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
-            mse_list = np.reshape(np.frombuffer(result_array), main_data_set['fit_points'])
+            mse_list = np.reshape(np.frombuffer(result_array), data_set_for_fitting['fit_points'])
 
             for ind in range(local_job_range[0], local_job_range[1]):
                 depth_set = local_data_set['depthset'][:, ind]
                 volt_set = local_data_set['voltset'][:, ind]
-                shifts, _ = get_shifts(main_data_set, depth_set, volt_set)
+                shifts, _ = get_shifts(data_set_for_fitting, depth_set, volt_set)
                 if shifts is not None:
-                    shifts -= main_data_set['data'][:, 2]
+                    shifts -= data_set_for_fitting['spectroscopic_data'][:, 2]
                     mse_list[ind] = np.inner(shifts, shifts)
                 else:
                     mse_list[ind] = 1e6
@@ -432,7 +466,7 @@ class Gradient_Mesh_Solver():
                 workers = []
                 for i in range(n_cpu):
                     worker = mp.Process(target=self._mse_calculator,
-                                        args=(self.parent.main_data_set, self.local_data_set, jobs_queue, mse_list))
+                                        args=(self.parent.data_set_for_fitting, self.local_data_set, jobs_queue, mse_list))
                     workers.append(worker)
                     worker.start()
 
@@ -443,9 +477,9 @@ class Gradient_Mesh_Solver():
                 for ind in range(self.local_data_set['fit_points']):
                     depth_set = self.local_data_set['depthset'][:, ind]
                     volt_set = self.local_data_set['voltset'][:, ind]
-                    shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+                    shifts, _ = get_shifts(self.parent.data_set_for_fitting, depth_set, volt_set)
                     if shifts is not None:
-                        shifts -= self.parent.main_data_set['data'][:, 2]
+                        shifts -= self.parent.data_set_for_fitting['spectroscopic_data'][:, 2]
                         self.local_data_set['mse'][ind] = np.inner(shifts, shifts)
                     else:
                         self.local_data_set['mse'][ind] = 1e6
@@ -473,7 +507,7 @@ class Gradient_Mesh_Solver():
                     plt.draw()
                     plt.gcf().canvas.flush_events()
             else:
-                self.parent.gui.update_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
+                self.parent.gui.update_potential_fit_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
 
         self.cycle -= 1
         plt.ioff()
@@ -497,32 +531,35 @@ class Gradient_Mesh_Solver():
                     self.shifts_graph[0].relim()
                     self.shifts_graph[0].autoscale_view()
 
-                    for point in range(self.parent.num_depth_points):
+                    for point in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof']):
                         self.v_graphs_stack[point][1].set_xdata(self.v_graphs_history[point][ind][0, :])
                         self.v_graphs_stack[point][2].set_xdata(self.v_graphs_history[point][ind][0, :])
                         self.v_graphs_stack[point][2].set_ydata(self.v_graphs_history[point][ind][1, :])
                         self.v_graphs_stack[point][0].relim()
                         self.v_graphs_stack[point][0].autoscale_view()
 
-                    for point in range(self.parent.num_depth_points-2):
+                    for point in range(self.parent.potential_model['num_depth_dof']):
                         self.d_graphs_stack[point][1].set_xdata(self.d_graphs_history[point][ind][0, :])
                         self.d_graphs_stack[point][2].set_xdata(self.d_graphs_history[point][ind][0, :])
                         self.d_graphs_stack[point][2].set_ydata(self.d_graphs_history[point][ind][1, :])
                         self.d_graphs_stack[point][0].relim()
                         self.d_graphs_stack[point][0].autoscale_view()
             else:
-                self.potential_graph.setData((self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0])*1e9,
+                self.potential_graph.setData((self.parent.data_set_for_fitting['fit_depth_points']
+                                              - self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
                                              self.potential_graphs_history[ind])
-                self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], self.shifts_graphs_history[ind])
+                self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0], self.shifts_graphs_history[ind])
 
-                for point in range(self.parent.num_depth_points):
+                for point in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof']):
                     self.v_graphs_stack[point][0].setData(self.v_graphs_history[point][ind][0, :],
                                                           np.ones_like(self.v_graphs_history[point][ind][0, :])
                                                           * self.local_data_set['t_val'])
                     self.v_graphs_stack[point][1].setData(self.v_graphs_history[point][ind][0, :],
                                                           self.v_graphs_history[point][ind][1, :])
 
-                for point in range(self.parent.num_depth_points - 2):
+                for point in range(self.parent.potential_model['num_depth_dof']):
                     self.d_graphs_stack[point][0].setData(self.d_graphs_history[point][ind][0, :],
                                                           np.ones_like(self.d_graphs_history[point][ind][0, :])
                                                           * self.local_data_set['t_val'])
@@ -542,8 +579,9 @@ class Gradient_Mesh_Solver():
         self.solution_history.append(
             np.vstack((loaded_data['depthset'][:, min_ind], loaded_data['voltset'][:, min_ind])))
 
-        for point in range(self.parent.num_depth_points):
+        for point in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof']):
             self.v_graphs_history[point].append(loaded_data['statistics']["V_points"][point])
 
-        for point in range(self.parent.num_depth_points - 2):
+        for point in range(self.parent.potential_model['num_depth_dof']):
             self.d_graphs_history[point].append(loaded_data['statistics']["D_points"][point])

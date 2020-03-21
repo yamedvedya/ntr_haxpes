@@ -35,14 +35,14 @@ def compile_uis(ui_compiler, in_dir, out_dir):
 if __name__ == "__main__":
 
     code_dir = os.path.dirname(sys.argv[0])
-    src_dir = code_dir + '/widgets'
-    uis_dir = code_dir + "/ui"
+    src_dir = code_dir + '/src/widgets'
+    uis_dir = code_dir + "/src/ui"
 
     print("Making widgets folder...")
 
-    if not os.path.isdir('./widgets'):
-        os.mkdir('./widgets')
-        f = open('./widgets/__init__.py', 'tw', encoding='utf-8')
+    if not os.path.isdir('src/widgets'):
+        os.mkdir('src/widgets')
+        f = open('src/widgets/__init__.py', 'tw', encoding='utf-8')
         f.close()
 
     print("Removing pyc files...")

@@ -131,9 +131,7 @@ dmypy.json
 .pyre/
 
 # Project related ignores
-/130
-/131
 /.idea
-/widgets
-/test
+/src/widgets
+/data
 temp_code.txt

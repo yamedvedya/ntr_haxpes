@@ -1,18 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from base_for_external_solver import Base_For_External_Solver
+from src.ntr_data_fitting.base_for_external_potential_solver import Base_For_External_Potential_Solver
 
-class PySOT_Solver(Base_For_External_Solver):
+class PySOT_Potential_Solver(Base_For_External_Potential_Solver):
 
     # ----------------------------------------------------------------------
     def __init__(self, parent):
 
-        super(PySOT_Solver, self).__init__(parent)
+        super(PySOT_Potential_Solver, self).__init__(parent)
 
     # ----------------------------------------------------------------------
     def reset_fit(self):
-        super(PySOT_Solver, self).reset_fit()
+        super(PySOT_Potential_Solver, self).reset_fit()
 
     # ----------------------------------------------------------------------
     def _fit_monitor(self, params, iter, resid, *args, **kws):
@@ -30,9 +30,12 @@ class PySOT_Solver(Base_For_External_Solver):
     # ----------------------------------------------------------------------
     def _extract_sets(self, params):
 
-        volt_set = [0 + params['point_{}_voltage'.format(ind)] for ind in range(self.parent.num_depth_points)]
-        depth_set = np.hstack((self.parent.structure[0], [0 + params['point_{}_position'.format(ind)] for ind in range(self.parent.num_depth_points-2)]))
-        depth_set = np.hstack((depth_set, self.parent.structure[0] + self.parent.structure[1]))
+        volt_set = [0 + params['point_{}_voltage'.format(ind)] for ind in range(self.parent.potential_model['num_depth_dof'] +
+                                                                    self.parent.potential_model['only_voltage_dof'])]
+        depth_set = np.hstack((self.parent.data_set_for_fitting['fit_depth_points'][0],
+                               [0 + params['point_{}_position'.format(ind)]
+                                for ind in range(self.parent.potential_model['num_depth_dof'])]))
+        depth_set = np.hstack((depth_set, self.parent.data_set_for_fitting['fit_depth_points'][-1]))
 
         return volt_set, depth_set
 

@@ -1,0 +1,1475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Settings</class>
+ <widget class="QMainWindow" name="Settings">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>550</width>
+    <height>704</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>550</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>550</width>
+    <height>16777215</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Settings</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_9">
+    <item row="0" column="0">
+     <widget class="QStackedWidget" name="stw_mode">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="page">
+       <layout class="QGridLayout" name="gridLayout_13">
+        <item row="0" column="1">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>282</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="4" column="0">
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>99</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBox_5">
+          <property name="title">
+           <string>X-Rays</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_10">
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_xray_value">
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>Value</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>X-rays specified by:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_20">
+             <property name="text">
+              <string>Line</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="cb_x_way">
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <item>
+              <property name="text">
+               <string>Wavelength (A)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Energy (eV)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>X-Ray line</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="cb_xray_line">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string/>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ag-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ag-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ag-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ag-Kb2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Co-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Co-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Co-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cr-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cr-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cr-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cu-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cu-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Cu-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Fe-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Fe-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Fe-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ge-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ge-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ge-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Mo-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Mo-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Mo-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ni-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ni-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Ni-Kb1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Zn-Ka1</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Zn-Ka2</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Zn-Kb1</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_37">
+             <property name="text">
+              <string>Polarization</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QComboBox" name="cb_xray_pol">
+             <item>
+              <property name="text">
+               <string>Sigma</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Pi</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_6">
+          <property name="minimumSize">
+           <size>
+            <width>500</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>500</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Substrate</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_11">
+           <item row="4" column="9">
+            <widget class="QLabel" name="label_30">
+             <property name="text">
+              <string>A</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QRadioButton" name="rb_sub_code">
+             <property name="text">
+              <string>Database code:</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">bg_sub_code</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>f' and f'':</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="3">
+            <widget class="QLineEdit" name="le_sub_formula">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QRadioButton" name="rb_sub_formula">
+             <property name="text">
+              <string>Formula</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">bg_sub_code</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="1" column="9">
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string>g/cm3</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4" colspan="6">
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>/ format: x0=(Re(x0), Im(x0))/</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="5">
+            <widget class="QLabel" name="label_23">
+             <property name="text">
+              <string>rho</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3" colspan="4">
+            <widget class="QLabel" name="label_29">
+             <property name="text">
+              <string>A   OR	  Transition layer tr =</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" colspan="4">
+            <widget class="QComboBox" name="cb_subsrate_database">
+             <property name="minimumSize">
+              <size>
+               <width>140</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>140</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="6" colspan="4">
+            <widget class="QComboBox" name="cb_subsrate_database_f">
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <item>
+              <property name="text">
+               <string>Automatic DB</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>X0h data (5-25 KeV; 0.5-2.5 A)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Henke data (0.01-30 KeV; 0.4-1200 A)</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Brennan data (0.03-700 KeV; 0.02-400 A)</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="1" colspan="3">
+            <widget class="QLineEdit" name="le_sub_susep">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QRadioButton" name="rb_sub_suscep">
+             <property name="text">
+              <string>Susceptibility x0</string>
+             </property>
+             <attribute name="buttonGroup">
+              <string notr="true">bg_sub_code</string>
+             </attribute>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QLabel" name="label_27">
+             <property name="text">
+              <string>Roughness: sigma =</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="4" colspan="6">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>/ this is used as: x0 = w0 * x0 /</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1" colspan="3">
+            <widget class="QDoubleSpinBox" name="dsp_sub_w0"/>
+           </item>
+           <item row="4" column="2">
+            <widget class="QDoubleSpinBox" name="dsp_sub_sigma">
+             <property name="minimumSize">
+              <size>
+               <width>60</width>
+               <height>0</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>x0 correction: w0 =</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="7" colspan="2">
+            <widget class="QDoubleSpinBox" name="dsp_sub_tr"/>
+           </item>
+           <item row="1" column="6" colspan="3">
+            <widget class="QDoubleSpinBox" name="dsp_sub_rho">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_7">
+          <property name="title">
+           <string>SW regions:</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_12">
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_sw_ang_from">
+             <property name="maximum">
+              <double>4.990000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QDoubleSpinBox" name="dsp_sw_ang_to">
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>5.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.200000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <widget class="QSpinBox" name="sp_sw_ang_points">
+             <property name="maximum">
+              <number>10000</number>
+             </property>
+             <property name="value">
+              <number>201</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_31">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Incidence angle from:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QLabel" name="label_34">
+             <property name="minimumSize">
+              <size>
+               <width>65</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>65</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>deg, points:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_32">
+             <property name="minimumSize">
+              <size>
+               <width>25</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>25</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>to:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_33">
+             <property name="text">
+              <string>Depth from:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_sw_depth_from">
+             <property name="maximum">
+              <double>4.990000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_36">
+             <property name="text">
+              <string>to:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QDoubleSpinBox" name="dsp_sw_depth_to">
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>1000.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.200000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QLabel" name="label_35">
+             <property name="text">
+              <string>A, points:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="5">
+            <widget class="QSpinBox" name="sp_sw_depth_points">
+             <property name="maximum">
+              <number>10000</number>
+             </property>
+             <property name="value">
+              <number>201</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QGroupBox" name="groupBox_8">
+          <property name="title">
+           <string>Structure fit:</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_14">
+           <item row="1" column="5">
+            <widget class="QDoubleSpinBox" name="dsp_comp_step">
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.050000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="6">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="4">
+            <widget class="QLabel" name="label_41">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Composition step (%):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_42">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Susceptibility step:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QDoubleSpinBox" name="dsp_sigma_step">
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_w0_step">
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2">
+            <widget class="QLabel" name="label_43">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>DW-like factor step:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_39">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Thickness step (nm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_40">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Roughness step (nm):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_thick_step">
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="dsp_rss_tol">
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_38">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>RSS tolerance (%):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="3">
+            <widget class="QDoubleSpinBox" name="dsp_x0_step">
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.100000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="page_2">
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>Reference spectra</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="3" column="1">
+            <widget class="QDoubleSpinBox" name="sb_ref_lorentz">
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.200000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="sb_ref_be_step">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="minimum">
+              <double>0.001000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.001000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="sb_ref_width">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.100000000000000</double>
+             </property>
+             <property name="value">
+              <double>2.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Gauss</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Lorentz</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="sb_ref_gauss">
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.300000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>BE step</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Region length</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="2">
+         <widget class="QGroupBox" name="groupBox_4">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>Sub layers settings</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>№ sub layers</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Lambda, nm</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QSpinBox" name="sp_sub_layers">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1001</number>
+             </property>
+             <property name="singleStep">
+              <number>50</number>
+             </property>
+             <property name="value">
+              <number>201</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="2">
+            <widget class="QDoubleSpinBox" name="dsp_max_e">
+             <property name="decimals">
+              <number>6</number>
+             </property>
+             <property name="singleStep">
+              <double>0.001000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Max E field, GV/m</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QDoubleSpinBox" name="dsp_lambda">
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0" rowspan="2">
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>Fitting settings</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="3" column="0" colspan="2">
+            <widget class="QFrame" name="f_mesh_gradient">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_3">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>V mesh</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>D mesh</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QSpinBox" name="sp_v_mesh">
+                <property name="minimumSize">
+                 <size>
+                  <width>100</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="singleStep">
+                 <number>2</number>
+                </property>
+                <property name="value">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QSpinBox" name="sp_d_mesh">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="singleStep">
+                 <number>2</number>
+                </property>
+                <property name="value">
+                 <number>5</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_15">
+                <property name="text">
+                 <string>V step, V</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_16">
+                <property name="text">
+                 <string>D step, nm</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="sp_v_step">
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="minimum">
+                 <double>0.001000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.001000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.010000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QDoubleSpinBox" name="sp_d_step">
+                <property name="minimum">
+                 <double>0.010000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.100000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.100000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QFrame" name="f_lm_fit">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_7">
+              <item row="1" column="1">
+               <widget class="QComboBox" name="cb_lm_fit_method"/>
+              </item>
+              <item row="2" column="0">
+               <widget class="QCheckBox" name="chk_lm_fit_monitor">
+                <property name="text">
+                 <string>Monitor fit</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>Method</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>Disply every X step:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QSpinBox" name="sb_lm_fit_monitor_step">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Solver</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QComboBox" name="cb_solver"/>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Ksi tolerance</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>t-stat value</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="sb_fit_tolerance">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="minimum">
+              <double>0.001000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.001000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="sp_t_value">
+             <property name="minimum">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.050000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.050000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="QFrame" name="f_pysot">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8"/>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QGroupBox" name="groupBox">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="title">
+           <string>Multiprocessing</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="2" column="0" colspan="2">
+            <widget class="QCheckBox" name="chk_mp_all_cores">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Use all available cores</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>№ cores:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>№ jobs/core</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QSpinBox" name="sp_num_cores">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QCheckBox" name="chk_use_mp">
+             <property name="text">
+              <string>Use multiprocessing</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="sb_jobs_cpu">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="value">
+              <number>5</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>17</width>
+            <height>63</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QDialogButtonBox" name="dialog_buttons">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::RestoreDefaults</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>550</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="bg_sub_code"/>
+ </buttongroups>
+</ui>

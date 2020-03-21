@@ -1,9 +1,9 @@
-from subfunctions import *
-from potential_models import calculatePotential
+from src.ntr_data_fitting.subfunctions import *
+from src.ntr_data_fitting.potential_models import calculatePotential
 import matplotlib.pyplot as plt
 import look_and_feel as lookandfeel
 
-class Base_For_External_Solver():
+class Base_For_External_Potential_Solver():
 
     settings = {}
 
@@ -31,13 +31,16 @@ class Base_For_External_Solver():
         self.axes = None
         self.plots = []
 
+        self.num_colums = 0
+
     # ----------------------------------------------------------------------
     def reset_fit(self):
 
         self.cycle = 0
 
-        self.v_history = [[] for _ in range(self.parent.num_depth_points)]
-        self.d_history = [[] for _ in range(self.parent.num_depth_points - 2)]
+        self.v_history = [[] for _ in range(self.parent.potential_model['only_voltage_dof'] +
+                                            self.parent.potential_model['num_depth_dof'])]
+        self.d_history = [[] for _ in range(self.parent.potential_model['num_depth_dof'])]
         self.potential_graphs_history = []
         self.shifts_graphs_history = []
 
@@ -47,32 +50,40 @@ class Base_For_External_Solver():
         self.shifts_graph = None
 
         if self.parent.STAND_ALONE_MODE and self.parent.DO_PLOT:
+            total_num_plots = self.parent.potential_model['only_voltage_dof'] + \
+                              2 * self.parent.potential_model['num_depth_dof'] + 2
+            self.num_colums = total_num_plots // 2
+
+            if total_num_plots % 2:
+                self.num_colums += 1
             if self.parent.settings['MONITOR_FIT'] and self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                self.fig, self.axes = plt.subplots(nrows=2, ncols=self.parent.num_depth_points)
-                self.plots = [[] for _ in range(self.parent.num_depth_points * 2)]
+                self.fig, self.axes = plt.subplots(nrows=2, ncols=self.num_colums)
+                self.plots = [[] for _ in range(total_num_plots)]
             else:
                 self.fig, self.axes = plt.subplots(nrows=2, ncols=0)
                 self.plots = [[], []]
+
             plt.ion()
 
     # ----------------------------------------------------------------------
     def set_external_graphs(self, graphs_layout):
 
         if self.parent.settings['MONITOR_FIT'] and self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-            for ind in range(self.parent.num_depth_points):
+            for ind in range(self.parent.potential_model['only_voltage_dof'] +
+                                            self.parent.potential_model['num_depth_dof']):
                 plot_axes = graphs_layout.addPlot(title="V_{}".format(ind), row=0, col=ind)
                 plot_axes.setLabel('bottom', 'Cycle, N')
                 plot_axes.setLabel('left', 'BE, eV')
                 self.v_graphs_stack.append(plot_axes.plot([0], [0], **lookandfeel.T_STAT_STYLE))
 
             ind = 0
-            for ind in range(self.parent.num_depth_points - 2):
+            for ind in range(self.parent.potential_model['num_depth_dof']):
                 plot_axes = graphs_layout.addPlot(title="D_{}".format(ind), row=1, col=ind)
                 plot_axes.setLabel('bottom', 'Cycle, N')
                 plot_axes.setLabel('left', 'Depth, nm')
                 self.d_graphs_stack.append(plot_axes.plot([0], [0], **lookandfeel.T_STAT_STYLE))
 
-            if self.parent.num_depth_points - 2:
+            if self.parent.potential_model['num_depth_dof']:
                 start_ind = ind + 1
             else:
                 start_ind = 0
@@ -83,23 +94,28 @@ class Base_For_External_Solver():
             shifts_plot = graphs_layout.addPlot(title="Shifts", row=0, col=0)
             potential_plot = graphs_layout.addPlot(title="Potential", row=1, col=0)
 
-        shifts_plot.plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2],
+        shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                         self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
                          **lookandfeel.CURRENT_SOURCE_SHIFT)
 
-        self.shifts_graph = shifts_plot.plot(self.parent.main_data_set['data'][:, 0],
-                                             self.parent.main_data_set['data'][:, 2],
+        self.shifts_graph = shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                             self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
                                              **lookandfeel.CURRENT_SIM_SHIFT)
 
         self.potential_graph = potential_plot.plot(
-            (self.parent.main_data_set['fit_depth_points'] - self.parent.structure[0]) * 1e9,
-            np.zeros_like(self.parent.main_data_set['fit_depth_points']),
+            (self.parent.data_set_for_fitting['fit_depth_points'] -
+             self.parent.data_set_for_fitting['fit_depth_points'][0]) * 1e9,
+
+            np.zeros_like(self.parent.data_set_for_fitting['fit_depth_points']),
             **lookandfeel.CURRENT_POTENTIAL_STYLE)
 
     # ----------------------------------------------------------------------
     def prepare_stand_alone_plots(self):
 
         if self.parent.settings['MONITOR_FIT'] and self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-            for ind in range(self.parent.num_depth_points):
+
+            for ind in range(self.parent.potential_model['only_voltage_dof'] +
+                                            self.parent.potential_model['num_depth_dof']):
                 self.axes[0, ind].set_title('V point {}'.format(ind + 1))
                 self.axes[0, ind].set_xlabel('Cycle, N')
                 self.axes[0, ind].set_ylabel('BE, eV')
@@ -107,7 +123,7 @@ class Base_For_External_Solver():
                                             self.axes[0, ind].plot(range(self.parent.settings['V_MESH']),
                                                                    np.ones(self.parent.settings['V_MESH']), 'g--')[0]])
 
-            for ind in range(self.parent.num_depth_points - 2):
+            for ind in range(self.parent.potential_model['num_depth_dof']):
                 self.axes[1, ind].set_title('D point {}'.format(ind + 1))
                 self.axes[1, ind].set_xlabel('Cycle, N')
                 self.axes[1, ind].set_ylabel('Depth, nm')
@@ -115,26 +131,30 @@ class Base_For_External_Solver():
                                             self.axes[1, ind].plot(range(self.parent.settings['D_MESH']),
                                                                    np.ones(self.parent.settings['D_MESH']), 'g--')[0]])
 
-            self.axes[1, self.parent.num_depth_points - 1].plot(self.parent.main_data_set['data'][:, 0],
-                                                                self.parent.main_data_set['data'][:, 2], 'x')
-            self.shifts_graph = [self.axes[1, self.parent.num_depth_points - 1],
-                                 self.axes[1, self.parent.num_depth_points - 1].plot(
-                                     self.parent.main_data_set['data'][:, 0],
-                                     self.parent.main_data_set['data'][:, 2], '-')[0]]
-            self.potential_graph = [self.axes[1, self.parent.num_depth_points - 2],
-                                    self.axes[1, self.parent.num_depth_points - 2].plot(
-                                        self.parent.main_data_set['fit_depth_points'],
-                                        np.zeros_like(self.parent.main_data_set['fit_depth_points']))[0]]
+            self.axes[1, self.num_colums - 1].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                                                self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], 'x')
+            self.shifts_graph = [self.axes[1, self.num_colums - 1],
+                                 self.axes[1, self.num_colums - 1].plot(
+                                     self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                     self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], '-')[0]]
+            self.potential_graph = [self.axes[1, self.num_colums - 2],
+                                    self.axes[1, self.num_colums - 2].plot(
+                                        self.parent.data_set_for_fitting['fit_depth_points'],
+                                        np.zeros_like(self.parent.data_set_for_fitting['fit_depth_points']))[0]]
 
         else:
-            self.axes[0, 0].plot(self.parent.main_data_set['data'][:, 0], self.parent.main_data_set['data'][:, 2], 'x')
-            self.shifts_graph = [self.axes[0, 0],
-                                 self.axes[0, 0].plot(self.parent.main_data_set['data'][:, 0],
-                                                      self.parent.main_data_set['data'][:, 2], '-')[0]]
+            self.axes[0, 0].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                 self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], 'x')
 
-            self.potential_graph = [self.axes[1, 0], self.axes[1, 0].plot(self.parent.main_data_set['fit_depth_points'],
-                                                                          np.zeros_like(self.parent.main_data_set[
-                                                                                            'fit_depth_points']))[0]]
+            self.shifts_graph = [self.axes[0, 0],
+                                 self.axes[0, 0].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                                      self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
+                                                      '-')[0]]
+
+            self.potential_graph = [self.axes[1, 0],
+                                    self.axes[1, 0].plot(self.parent.data_set_for_fitting['fit_depth_points'],
+                                                         np.zeros_like(self.parent.data_set_for_fitting[
+                                                                           'fit_depth_points']))[0]]
 
         plt.draw()
         plt.gcf().canvas.flush_events()
@@ -147,20 +167,21 @@ class Base_For_External_Solver():
 
         volt_set, depth_set = self._extract_sets(res)
 
-        for ind in range(self.parent.num_depth_points):
+        for ind in range(self.parent.potential_model['num_depth_dof'] + self.parent.potential_model['only_voltage_dof']):
             self.v_history[ind].append(volt_set[ind])
 
-        for ind in range(self.parent.num_depth_points - 2):
+        for ind in range(self.parent.potential_model['num_depth_dof']):
             self.d_history[ind].append(depth_set[ind + 1])
 
         self.solution_history.append(np.vstack((depth_set, volt_set)))
 
-        last_best_potential = calculatePotential(depth_set, volt_set, self.parent.main_data_set['fit_depth_points'],
-                                                 self.parent.main_data_set['model'])
+        last_best_potential = calculatePotential(depth_set, volt_set,
+                                                 self.parent.data_set_for_fitting['fit_depth_points'],
+                                                 self.parent.data_set_for_fitting['model'])
 
         self.potential_graphs_history.append(last_best_potential)
 
-        last_best_shifts, last_intensity = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+        last_best_shifts, last_intensity = get_shifts(self.parent.data_set_for_fitting, depth_set, volt_set)
         self.shifts_graphs_history.append(last_best_shifts)
 
         cycles = np.arange(self.cycle)
@@ -168,13 +189,14 @@ class Base_For_External_Solver():
         if self.parent.STAND_ALONE_MODE:
             if self.parent.DO_PLOT:
                 if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                    for ind in range(self.parent.num_depth_points):
+                    for ind in range(self.parent.potential_model['num_depth_dof'] +
+                                     self.parent.potential_model['only_voltage_dof']):
                         self.v_graphs_stack[ind][1].set_xdata(cycles)
                         self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
                         self.v_graphs_stack[ind][0].relim()
                         self.v_graphs_stack[ind][0].autoscale_view()
 
-                    for ind in range(self.parent.num_depth_points - 2):
+                    for ind in range(self.parent.potential_model['num_depth_dof']):
                         self.d_graphs_stack[ind][1].set_xdata(cycles)
                         self.d_graphs_stack[ind][1].set_ydata(self.d_history[ind])
                         self.d_graphs_stack[ind][0].relim()
@@ -189,24 +211,25 @@ class Base_For_External_Solver():
                 self.shifts_graph[0].autoscale_view()
         else:
             if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                for ind in range(self.parent.num_depth_points):
+                for ind in range(self.parent.potential_model['num_depth_dof'] +
+                                     self.parent.potential_model['only_voltage_dof']):
                     self.v_graphs_stack[ind].setData(cycles, self.v_history[ind])
     
-                for ind in range(self.parent.num_depth_points - 2):
+                for ind in range(self.parent.potential_model['num_depth_dof']):
                     self.d_graphs_stack[ind].setData(cycles, self.d_history[ind])
 
-            self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'],
+            self.potential_graph.setData(self.parent.data_set_for_fitting['fit_depth_points'],
                                          last_best_potential)
 
-            self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0], last_best_shifts)
+            self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0], last_best_shifts)
 
         if self.parent.STAND_ALONE_MODE:
             if self.parent.DO_PLOT:
                 plt.draw()
                 plt.gcf().canvas.flush_events()
         else:
-            self.parent.gui.update_cycles(self.cycle, 0,
-                                          self.solution_history[self.cycle - 1])
+            self.parent.gui.update_potential_fit_cycles(self.cycle, 0,
+                                                        self.solution_history[self.cycle - 1])
 
      # ----------------------------------------------------------------------
     def _errFunc(self, params):
@@ -214,12 +237,12 @@ class Base_For_External_Solver():
         in a 2-D array, and modeled by model function"""
 
         volt_set, depth_set = self._extract_sets(params)
-        shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
+        shifts, _ = get_shifts(self.parent.data_set_for_fitting, depth_set, volt_set)
 
         if shifts is not None:
-            return shifts - self.parent.main_data_set['data'][:, 2]
+            return shifts - self.parent.data_set_for_fitting['spectroscopic_data'][:, 2]
         else:
-            return 100 - self.parent.main_data_set['data'][:, 2]
+            return 100 - self.parent.data_set_for_fitting['spectroscopic_data'][:, 2]
 
     # ----------------------------------------------------------------------
     def get_data_for_save(self):
@@ -244,13 +267,14 @@ class Base_For_External_Solver():
             if self.parent.STAND_ALONE_MODE:
                 if self.parent.DO_PLOT:
                     if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                        for ind in range(self.parent.num_depth_points):
+                        for ind in range(self.parent.potential_model['num_depth_dof'] +
+                                     self.parent.potential_model['only_voltage_dof']):
                             self.v_graphs_stack[ind][1].set_xdata(cycles)
                             self.v_graphs_stack[ind][1].set_ydata(self.v_history[ind])
                             self.v_graphs_stack[ind][0].relim()
                             self.v_graphs_stack[ind][0].autoscale_view()
 
-                        for ind in range(self.parent.num_depth_points - 2):
+                        for ind in range(self.parent.potential_model['num_depth_dof']):
                             self.d_graphs_stack[ind][1].set_xdata(cycles)
                             self.d_graphs_stack[ind][1].setData(self.d_history[ind])
                             self.d_graphs_stack[ind][0].relim()
@@ -266,16 +290,17 @@ class Base_For_External_Solver():
 
             else:
                 if self.POSSIBLE_TO_DISPLAY_INTERMEDIATE_STEPS:
-                    for ind in range(self.parent.num_depth_points):
+                    for ind in range(self.parent.potential_model['num_depth_dof'] +
+                                     self.parent.potential_model['only_voltage_dof']):
                         self.v_graphs_stack[ind].setData(cycles, self.v_history[ind])
 
-                    for ind in range(self.parent.num_depth_points - 2):
+                    for ind in range(self.parent.potential_model['num_depth_dof']):
                         self.d_graphs_stack[ind].setData(cycles, self.d_history[ind])
 
-                self.potential_graph.setData(self.parent.main_data_set['fit_depth_points'],
+                self.potential_graph.setData(self.parent.data_set_for_fitting['fit_depth_points'],
                                              self.potential_graphs_history[ind])
 
-                self.shifts_graph.setData(self.parent.main_data_set['data'][:, 0],
+                self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
                                           self.shifts_graphs_history[ind])
 
                 return 0, self.solution_history[ind]

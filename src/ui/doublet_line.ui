@@ -1,0 +1,1590 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>doublet</class>
+ <widget class="QWidget" name="doublet">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>583</width>
+    <height>527</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="Line" name="line">
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="lb_name">
+       <property name="text">
+        <string>Peak name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="le_name"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="chk_functional_peak">
+       <property name="text">
+        <string>Functional peak</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_delete">
+       <property name="text">
+        <string>Delete</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_area_main_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_24">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QCheckBox" name="chk_area_said_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_area_said">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="10">
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_25">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_area_said_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="8">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QRadioButton" name="rb_area_said_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_area_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QCheckBox" name="chk_area_said_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="5">
+      <widget class="QRadioButton" name="rb_area_main_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_area_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="4">
+      <widget class="QLabel" name="label_34">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Area</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QRadioButton" name="rb_area_said_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_area_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="6">
+      <widget class="QLabel" name="label_22">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="chk_area_main_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_area_main_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="chk_area_main_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" rowspan="2">
+      <widget class="QLabel" name="label_44">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Said:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_45">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_area_main">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="2">
+      <widget class="QLabel" name="label_2">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Main:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QRadioButton" name="rb_area_main_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_area_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_area_said_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_area_main_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="maximum">
+        <double>1000000000.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_area_said_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="8">
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="chk_pos_main_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="2">
+      <widget class="QLabel" name="label_5">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Main:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_pos_main">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="chk_pos_main_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="4">
+      <widget class="QLabel" name="label_46">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Position</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QRadioButton" name="rb_pos_said_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_pos_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_26">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_pos_said">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QCheckBox" name="chk_pos_said_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_27">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_pos_said_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="10">
+      <spacer name="horizontalSpacer_8">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="5">
+      <widget class="QRadioButton" name="rb_pos_main_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_pos_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QCheckBox" name="chk_pos_said_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="8">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QRadioButton" name="rb_pos_said_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_pos_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="6">
+      <widget class="QLabel" name="label_28">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_pos_main_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_pos_main_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="8">
+      <widget class="QLabel" name="label_29">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_pos_said_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>-10000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>10000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QRadioButton" name="rb_pos_main_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_pos_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="1" rowspan="2">
+      <widget class="QLabel" name="label_47">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Said:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_48">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_pos_main_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_pos_said_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="chk_gauss_main_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="2">
+      <widget class="QLabel" name="label_7">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Main:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_gauss_main">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="chk_gauss_main_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="4">
+      <widget class="QLabel" name="label_49">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Gauss</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QRadioButton" name="rb_gauss_said_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_gauss_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_30">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_gauss_said">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QCheckBox" name="chk_gauss_said_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_31">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_gauss_said_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="10">
+      <spacer name="horizontalSpacer_9">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="5">
+      <widget class="QRadioButton" name="rb_gauss_main_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_gauss_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QCheckBox" name="chk_gauss_said_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="8">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QRadioButton" name="rb_gauss_said_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_gauss_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="6">
+      <widget class="QLabel" name="label_32">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_gauss_main_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_gauss_main_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="8">
+      <widget class="QLabel" name="label_33">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_gauss_said_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QRadioButton" name="rb_gauss_main_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_gauss_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="1" rowspan="2">
+      <widget class="QLabel" name="label_50">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Said:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_51">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_gauss_main_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_gauss_said_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line_6">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="1" column="3">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="chk_lor_main_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1" rowspan="2">
+      <widget class="QLabel" name="label_9">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Main:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_lor_main">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="chk_lor_main_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="4">
+      <widget class="QLabel" name="label_52">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Lorentz</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="QRadioButton" name="rb_lor_said_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_lor_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_53">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="6">
+      <widget class="QLabel" name="label_16">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3" colspan="2">
+      <widget class="QDoubleSpinBox" name="dsp_lor_said">
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QCheckBox" name="chk_lor_said_fit">
+       <property name="text">
+        <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_54">
+       <property name="text">
+        <string>Limits:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_lor_said_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="10">
+      <spacer name="horizontalSpacer_11">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="5">
+      <widget class="QRadioButton" name="rb_lor_main_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_lor_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="5">
+      <widget class="QCheckBox" name="chk_lor_said_dep">
+       <property name="text">
+        <string>Dependent</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="8">
+      <widget class="QLabel" name="label_17">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QRadioButton" name="rb_lor_said_relative">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Relative</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_lor_said</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="3" column="6">
+      <widget class="QLabel" name="label_55">
+       <property name="text">
+        <string>min:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="7">
+      <widget class="QDoubleSpinBox" name="dsb_lor_main_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_lor_main_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="8">
+      <widget class="QLabel" name="label_56">
+       <property name="text">
+        <string>max:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="9">
+      <widget class="QDoubleSpinBox" name="dsb_lor_said_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>75</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="minimum">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QRadioButton" name="rb_lor_main_abolut">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Absolut</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_lor_main</string>
+       </attribute>
+      </widget>
+     </item>
+     <item row="2" column="1" rowspan="2">
+      <widget class="QLabel" name="label_57">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Said:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_58">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_lor_main_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="6" colspan="4">
+      <widget class="QComboBox" name="cmb_lor_said_dep">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>2</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="Line" name="line_2">
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>2</number>
+     </property>
+     <property name="midLineWidth">
+      <number>0</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="bg_gauss_said"/>
+  <buttongroup name="bg_pos_said"/>
+  <buttongroup name="bg_lor_said"/>
+  <buttongroup name="bg_area_said"/>
+  <buttongroup name="bg_pos_main"/>
+  <buttongroup name="bg_lor_main"/>
+  <buttongroup name="bg_gauss_main"/>
+  <buttongroup name="bg_area_main"/>
+ </buttongroups>
+</ui>
