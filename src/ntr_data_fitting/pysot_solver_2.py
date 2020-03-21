@@ -8,8 +8,8 @@ from poap.controller import ThreadController, BasicWorkerThread
 import numpy as np
 import time
 from optparse import OptionParser
-from src.ntr_data_fitting.subfunctions import get_shifts
-from src.ntr_data_fitting.ntr_fitter import NTR_fitter
+from subfunctions import get_shifts
+from fitter import NTR_fitter
 
 try:
     from mpi4py import MPI
@@ -22,7 +22,7 @@ class HAXPESOptimizationProblem(OptimizationProblem):
 
     def __init__(self, parent):
         self.parent = parent
-        self.dim = 2 * self.parent.potential_model['num_depth_dof'] + self.parent.potential_model['only_voltage_dof']
+        self.dim = self.parent.num_depth_points * 2 - 2
         self.ub, self.lb = self._evaluate_borders()
         self.int_var = np.array([])
         self.cont_var = np.arange(0, self.dim)
@@ -35,8 +35,8 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         max_voltage = self.parent.settings['VOLT_MAX'] - 0.01
         min_voltage = -max_voltage
-        max_depth = self.parent.data_set_for_fitting['fit_depth_points'][-1]
-        min_depth = self.parent.data_set_for_fitting['fit_depth_points'][0]
+        max_depth = self.parent.structure[0] + self.parent.structure[1]
+        min_depth = self.parent.structure[0]
         n_intermediate_points = int((self.dim - 2) / 2)
         ub = np.empty(self.dim)
         lb = np.empty(self.dim)
@@ -55,9 +55,8 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         n_intermediate_points = int((self.dim - 2) / 2)
         volt_set = x[0:(n_intermediate_points + 2)]
-        left_border = self.parent.data_set_for_fitting['fit_depth_points'][0] + 1e-10
-        right_border = self.parent.data_set_for_fitting['fit_depth_points'][-1] - 1e-10
-        borders = self.parent.start_values[1]
+        left_border = self.parent.structure[0]
+        right_border = self.parent.structure[0] + self.parent.structure[1]
         depth_set = np.concatenate(([left_border], x[(n_intermediate_points + 2):], [right_border]))
 
         return volt_set, depth_set
@@ -70,11 +69,11 @@ class HAXPESOptimizationProblem(OptimizationProblem):
         """
         super().__check_input__(x)
         volt_set, depth_set = self._extract_sets(x)
-        shifts, _ = get_shifts(self.parent.data_set_for_fitting, depth_set, volt_set)
+        shifts, _ = get_shifts(self.parent.main_data_set, depth_set, volt_set)
         if shifts is None:
             obj_value = np.array(100)  # костыль!
         else:
-            obj_value = np.sum((shifts - self.parent.data_set_for_fitting['spectroscopic_data'][:, 2]) ** 2)
+            obj_value = np.sum((shifts - self.parent.main_data_set['data'][:, 2]) ** 2)
         return obj_value
 
 
@@ -144,8 +143,9 @@ def single_thread_execution(fitter, max_evals):
     stop = time.time()
 
     print('Best value found: {0}'.format(result.value))
-    print('Best solution found: {0}\n'.format(
-        np.array_str(result.params[0], max_line_width=np.inf)))
+    print('Best solution found:')
+    print('Voltages: {0}'.format(opt_problem._extract_sets(result.params[0])[0]))
+    print('Depth: {0}'.format(opt_problem._extract_sets(result.params[0])[1] - opt_problem._extract_sets(result.params[0])[1][0]))
     print(stop - start)
 
 
@@ -161,8 +161,8 @@ if __name__ == '__main__':
 
     fitter = NTR_fitter()
     start_values = fitter.load_fit_set(options.data_set)
-    max_evals = 100
-    mpi_execution(fitter, max_evals)
-    # single_thread_execution(fitter, max_evals)
+    max_evals = 10
+    #mpi_execution(fitter, max_evals)
+    single_thread_execution(fitter, max_evals)
 
 
