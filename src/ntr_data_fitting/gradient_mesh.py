@@ -445,7 +445,7 @@ class Gradient_Mesh_Solver():
         self.cycle = 0
         result_found = False
 
-        while self.parent.fit_in_progress and not result_found:
+        while self.parent.fit_in_progress and not result_found and self.cycle <10:
             start_time = time.time()
             self._get_fit_set()
 

@@ -9,7 +9,7 @@ import sys
 # ----------------------------------------------------------------------
 
 ui_compilers = {"linux": {
-    "pyqt": "pyuic",
+    "pyqt": "pyuic5",
     "pyside": "pyside-uic"
 },
     "windows": {
