@@ -186,7 +186,6 @@ class Gradient_Mesh_Solver():
         depth_set = self.local_data_set['depthset'][:, best_ksi_ind]
         volt_set = self.local_data_set['voltset'][:, best_ksi_ind]
 
-
         self.solution_history.append(np.vstack((depth_set, volt_set)))
 
         self.local_data_set['last_best_potential'] = calculatePotential(depth_set, volt_set,
@@ -200,8 +199,8 @@ class Gradient_Mesh_Solver():
 
         self.shifts_graphs_history.append(self.local_data_set['last_best_shifts'])
 
-        if self.parent.STAND_ALONE_MODE:
-            if self.parent.DO_PLOT:
+        if self.parent.DO_PLOT:
+            if self.parent.STAND_ALONE_MODE:
                 self.potential_graph[1].set_ydata(self.local_data_set['last_best_potential'])
                 self.potential_graph[0].relim()
                 self.potential_graph[0].autoscale_view()
@@ -209,11 +208,12 @@ class Gradient_Mesh_Solver():
                 self.shifts_graph[1].set_ydata(self.local_data_set['last_best_shifts'])
                 self.shifts_graph[0].relim()
                 self.shifts_graph[0].autoscale_view()
-        else:
-            self.potential_graph.setData((self.parent.data_set_for_fitting['fit_depth_points'] -
-                                          self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
-                                         self.local_data_set['last_best_potential'])
-            self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0], self.local_data_set['last_best_shifts'])
+            else:
+                self.potential_graph.setData((self.parent.data_set_for_fitting['fit_depth_points'] -
+                                              self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
+                                             self.local_data_set['last_best_potential'])
+                self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                          self.local_data_set['last_best_shifts'])
 
     # ----------------------------------------------------------------------
     def _generate_start_set(self, start_values):
@@ -502,8 +502,7 @@ class Gradient_Mesh_Solver():
             print('Error calculation time: {}, time per point: {}'.format(error_cycle_time, time_pre_point))
 
             start_time = time.time()
-            if self.parent.DO_PLOT:
-                self._plot_result()
+            self._plot_result()
             result_found = self._analyse_results()
             self.parent.save_fit_res()
             print('Plot and save time: {}'.format(time.time() - start_time))
