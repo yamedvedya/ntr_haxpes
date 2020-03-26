@@ -212,7 +212,7 @@ class NTR_Window(QtWidgets.QMainWindow):
                 fit_type = self.ntr_fitter.load_fit_res(new_file[0][0])
                 self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
                 if fit_type == 'pot':
-                    self._restore_model()
+                    self._restore_model(False)
                     if hasattr(self.ntr_fitter.potential_solver, "best_ksi"):
                         ksi = self.ntr_fitter.potential_solver.best_ksi[self.ntr_fitter.potential_solver.cycle]
                     else:
@@ -257,7 +257,7 @@ class NTR_Window(QtWidgets.QMainWindow):
                 self._restore_components()
                 self._reset_functional_peak()
                 self._restore_layers()
-                self._restore_model()
+                self._restore_model(True)
             else:
                 raise RuntimeError('Not implemented')
 
@@ -886,7 +886,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 # ----------------------------------------------------------------------
 
     # ----------------------------------------------------------------------
-    def _restore_model(self):
+    def _restore_model(self, reset_model):
         self._block_potential_fit_signals(True)
         self._potential_model_widgets = []
         self._ui.p_sb_max_potential.setValue(self.settings['VOLT_MAX'])
@@ -899,21 +899,22 @@ class NTR_Window(QtWidgets.QMainWindow):
                                                            - self.ntr_fitter.potential_model['only_voltage_dof'])
                         self._potential_model_selected(False)
 
-        try:
-            counter = 1
-            for widget in self._potential_model_widgets:
-                if isinstance(widget, TopBottomPotential):
-                    widget.set_values((self.ntr_fitter._last_sim_potential['v_set'][0],
-                                       self.ntr_fitter._last_sim_potential['v_set'][-1]))
-                elif isinstance(widget, BreakingPoint):
-                    widget.set_values(((self.ntr_fitter._last_sim_potential['d_set'][counter] -
-                                       self.ntr_fitter._last_sim_potential['d_set'][0])*1e10,
-                                       self.ntr_fitter._last_sim_potential['v_set'][counter]))
-                    counter = counter + 1
-        except:
-            pass
+        if reset_model:
+            try:
+                counter = 1
+                for widget in self._potential_model_widgets:
+                    if isinstance(widget, TopBottomPotential):
+                        widget.set_values((self.ntr_fitter._last_sim_potential['v_set'][0],
+                                           self.ntr_fitter._last_sim_potential['v_set'][-1]))
+                    elif isinstance(widget, BreakingPoint):
+                        widget.set_values(((self.ntr_fitter._last_sim_potential['d_set'][counter] -
+                                           self.ntr_fitter._last_sim_potential['d_set'][0])*1e10,
+                                           self.ntr_fitter._last_sim_potential['v_set'][counter]))
+                        counter = counter + 1
+            except:
+                pass
 
-        self._potential_model_edited()
+            self._potential_model_edited()
         self._block_potential_fit_signals(False)
     # ----------------------------------------------------------------------
     def _block_potential_fit_signals(self, flag):
