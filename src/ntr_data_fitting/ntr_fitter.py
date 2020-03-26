@@ -340,13 +340,6 @@ class NTR_fitter():
                         self.potential_solver.load_fit_res(loaded_data)
             except EOFError:
                 pass
-        if hasattr(self.potential_solver, "best_ksi"):
-            self.gui.update_potential_fit_cycles(self.potential_solver.cycle, self.potential_solver.best_ksi[self.potential_solver.cycle],
-                                                 self.potential_solver.solution_history[self.potential_solver.cycle - 1])
-        else:
-            self.gui.update_potential_fit_cycles(self.potential_solver.cycle, 0,
-                                                 self.potential_solver.solution_history[self.potential_solver.cycle - 1])
-
         return 'pot'
 
     # ----------------------------------------------------------------------

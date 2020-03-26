@@ -581,6 +581,7 @@ class Gradient_Mesh_Solver():
     def load_fit_res(self, loaded_data):
 
         self.cycle += 1
+        self.local_data_set['t_val'] = loaded_data['t_val']
         self.best_ksi.append(np.min(loaded_data['mse']))
         self.potential_graphs_history.append(loaded_data['last_best_potential'])
         self.shifts_graphs_history.append(loaded_data['last_best_shifts'])

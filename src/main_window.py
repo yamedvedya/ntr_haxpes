@@ -208,12 +208,19 @@ class NTR_Window(QtWidgets.QMainWindow):
                 self._ui.l_folder.setText(new_file[0][0])
                 self._ui.tab_mode.setEnabled(True)
                 self._ui.cb_experimental_set.setEnabled(False)
+                self.ntr_fitter.potential_solver.reset_fit()
                 fit_type = self.ntr_fitter.load_fit_res(new_file[0][0])
+                self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
                 if fit_type == 'pot':
-                    self._set_potential_fit_initial_model(self.ntr_fitter.potential_model['code'],
-                                                          self.ntr_fitter.potential_model['num_depth_dof'])
-                    self.fit_pot_graphs_layout.clear()
-                    self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
+                    self._restore_model()
+                    if hasattr(self.ntr_fitter.potential_solver, "best_ksi"):
+                        ksi = self.ntr_fitter.potential_solver.best_ksi[self.ntr_fitter.potential_solver.cycle]
+                    else:
+                        ksi = 0
+                    self.update_potential_fit_cycles(self.ntr_fitter.potential_solver.cycle, ksi,
+                                                         self.ntr_fitter.potential_solver.solution_history[
+                                                             self.ntr_fitter.potential_solver.cycle - 1])
+
                     self._display_potential_fit_cycle()
                 else:
                     raise RuntimeError('Not implemented')
