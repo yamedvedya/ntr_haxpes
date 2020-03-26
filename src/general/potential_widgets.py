@@ -78,7 +78,7 @@ class TopBottomPotential(QtWidgets.QWidget):
         self.blockSignals(False)
 
     # ----------------------------------------------------------------------
-    def change_layer_thichness(self, new_value):
+    def change_layer_thickness(self, new_value):
         self.max_depth = new_value*1e-10
 # ----------------------------------------------------------------------
 class BreakingPoint(QtWidgets.QWidget):
@@ -163,5 +163,5 @@ class BreakingPoint(QtWidgets.QWidget):
         self.blockSignals(False)
 
     # ----------------------------------------------------------------------
-    def change_layer_thichness(self, new_value):
+    def change_layer_thickness(self, new_value):
         self.max_depth = new_value*1e-10 - 0.01

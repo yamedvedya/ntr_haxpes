@@ -53,13 +53,21 @@ class Intensity_Solver():
                             layer_match *= sw_set['structure'][ind][key] == value
             if layer_match:
                 self.parent.request_sw_from_history(sw_set_ind)
-                return
+                return sw_set_ind
 
         self.parent.request_sw_from_server()
     # ----------------------------------------------------------------------
     def get_sw_from_history(self, ind):
 
         return self.sw_history[ind]['structure'], self.sw_history[ind]['sw']
+
+    # ----------------------------------------------------------------------
+    def _reoder_sw_history(self, structure):
+
+        ind = self.look_for_sw_in_history(structure)
+        self.sw_history.append(self.sw_history[ind])
+        del self.sw_history[ind]
+        self.parent.request_sw_from_history(-1)
 
     # ----------------------------------------------------------------------
     def set_new_history_file(self, directory, sample_name):
@@ -204,6 +212,8 @@ class Intensity_Solver():
             if not directions[ind]:
                 self._var_at_lim[ind] = True
 
+        return directions
+
     # ----------------------------------------------------------------------
     def bfgs_decend(self, var_list):
 
@@ -219,19 +229,20 @@ class Intensity_Solver():
         self._current_structure = copy.deepcopy(self.parent.structure)
         self._cycle = 0
         solution_found = False
+        self.look_for_sw_in_history(self.parent.structure)
         diffs, rss_in_point = self._diff_calculator()
         self._rss_history.append(rss_in_point)
         msg += ' Start RSS: {:0.3e}'.format(rss_in_point)
         self.parent.gui.add_message_to_fit_history(msg)
 
         while not solution_found and self.parent.fit_in_progress:
-            direction = np.zeros(len(var_list))
+            directions = np.zeros(len(var_list))
             for ind, var in enumerate(self._var_list):
-                direction[ind] = - 1 // diffs[ind]
-            self.parent.structure = copy.deepcopy(self._current_structure)
-            self._check_limits(direction)
+                directions[ind] = -np.sign(diffs[ind])*(max(1, 1 // np.abs(diffs[ind])))
 
-            final_direction = self._line_search(direction, diffs, rss_in_point)
+            self.parent.structure = copy.deepcopy(self._current_structure)
+            directions = self._check_limits(directions)
+            final_direction = self._line_search(directions, diffs, rss_in_point)
 
             self.parent.structure = copy.deepcopy(self._current_structure)
             for ind, var in enumerate(self._var_list):
@@ -261,5 +272,6 @@ class Intensity_Solver():
 
             self._cycle += 1
 
+        self._reoder_sw_history(self.parent.structure)
         self.parent.gui.add_message_to_fit_history('Solution found')
         self.parent.fit_in_progress = False

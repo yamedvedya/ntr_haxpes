@@ -191,7 +191,7 @@ class Gradient_Mesh_Solver():
 
         self.local_data_set['last_best_potential'] = calculatePotential(depth_set, volt_set,
                                                                         self.parent.data_set_for_fitting['fit_depth_points'],
-                                                                        self.parent.data_set_for_fitting['model'])
+                                                                        self.parent.potential_model['code'])
 
         self.potential_graphs_history.append(self.local_data_set['last_best_potential'])
 
@@ -236,10 +236,19 @@ class Gradient_Mesh_Solver():
 
         d_half_steps = int(np.floor(self.parent.settings['D_MESH'] / 2))
 
+        d_min = self.parent.data_set_for_fitting['fit_depth_points'][0] + self.parent.settings['D_STEP']*1e-9
+        d_max = self.parent.data_set_for_fitting['fit_depth_points'][-1] - self.parent.settings['D_STEP']*1e-9
+
         for point in range(self.parent.potential_model['num_depth_dof']):
             self.d_set[point] = start_values[point + 1][0] + np.linspace(-self.parent.settings['D_STEP'] * d_half_steps,
                                                                      self.parent.settings['D_STEP'] * d_half_steps,
-                                                                     self.parent.settings['D_MESH'])
+                                                                     self.parent.settings['D_MESH']) * 1e-9
+
+            if self.d_set[point][0] < d_min:
+                self.d_set[point] += d_min - self.d_set[point][0]
+
+            if self.d_set[point][-1] > d_max:
+                self.d_set[point] -= self.d_set[point][-1] - d_max
 
     # ----------------------------------------------------------------------
     def _fill_voltages(self, selected_v, last_v_set, d_set):
@@ -408,8 +417,8 @@ class Gradient_Mesh_Solver():
             if local_job_range == None:
                 break
 
-            # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
-            mse_list = np.reshape(np.frombuffer(result_array), data_set_for_fitting['fit_points'])
+            print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
+            mse_list = np.reshape(np.frombuffer(result_array), local_data_set['fit_points'])
 
             for ind in range(local_job_range[0], local_job_range[1]):
                 depth_set = local_data_set['depthset'][:, ind]
@@ -469,7 +478,7 @@ class Gradient_Mesh_Solver():
                                         args=(self.parent.data_set_for_fitting, self.local_data_set, jobs_queue, mse_list))
                     workers.append(worker)
                     worker.start()
-
+                print('All workers started')
                 jobs_queue.join()
 
                 self.local_data_set['mse'] = np.reshape(np.frombuffer(mse_list), self.local_data_set['fit_points'])

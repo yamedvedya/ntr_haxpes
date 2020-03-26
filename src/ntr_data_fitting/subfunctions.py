@@ -11,7 +11,7 @@ ABSORPTION_LENGTH = 5e-6
 def get_shifts(data_set, depth_set, volt_set):
 
     if np.where(np.abs(np.diff(volt_set) / np.diff(depth_set)) > data_set['FIELD_MAX']*1e9)[0].size == 0:
-        volts_values = calculatePotential(depth_set, volt_set, data_set['fit_depth_points'], data_set['model'])
+        volts_values = calculatePotential(depth_set, volt_set, data_set['fit_depth_points'], data_set['model_code'])
         peak_fit_result = np.zeros_like(data_set['spectroscopic_data'][:, 0])
         intensities = np.zeros_like(data_set['spectroscopic_data'][:, 0])
 

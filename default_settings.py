@@ -21,7 +21,7 @@ MAX_NUM_COMPONENTS = 10
 # ----------------------------------------------------------------------
 
 X_WAY = 2
-WAVE = 4.60
+WAVE = 6.00
 LINE = ''
 IPOL = 2
 
@@ -73,7 +73,7 @@ DISPLAY_EACH_X_STEP = 1
 V_MESH = 5
 D_MESH = 5
 V_STEP = 0.01
-D_STEP = 0.50
+D_STEP = 0.2
 
 FIELD_MAX = 1
 

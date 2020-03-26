@@ -78,12 +78,13 @@ def get_sw_from_server(general_settings, structure, sample_folder=None):
 
     task = response.find_all('p')[0].find_all('b')[1].get_text()
 
-    status = BeautifulSoup(requests.get('https://x-server.gmca.aps.anl.gov/cgi/wwwwatch.exe?jobname={}'.format(task)).content,
-                           'html.parser')
-
-    while 'Processing, please wait...' in status.find_all('p')[0].get_text().strip():
+    finished = False
+    while not finished:
         status = BeautifulSoup(requests.get('https://x-server.gmca.aps.anl.gov/cgi/wwwwatch.exe?jobname={}'.format(task)).content,
             'html.parser')
+
+        test_status = status.find_all('p')[0].get_text().strip()
+        finished = ('Processing, please wait...' not in test_status) and ('Progress:' not in test_status)
 
     if status.find_all('th') == []:
         display_link = None
@@ -94,7 +95,7 @@ def get_sw_from_server(general_settings, structure, sample_folder=None):
             if 'Download zipped results' in line.get_text():
                 download_link = line.find('a').get('href')
 
-        if display_link:
+        if display_link is not None:
             sw_data = requests.get('https://x-server.gmca.aps.anl.gov/{}'.format(display_link)).content
         else:
             raise RuntimeError('Cannot find link to results')

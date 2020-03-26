@@ -23,10 +23,10 @@ def get_model_list():
 # ----------------------------------------------------------------------
 def calculatePotential(depth_set, volt_set, fit_depth_points, model):
 
-    if model['code'] == 'lin':
+    if model == 'lin':
         return np.interp(fit_depth_points, depth_set, volt_set)
 
-    elif model['code'] == 'dbl_sqrt':
+    elif model == 'dbl_sqrt':
         volts = np.zeros_like(fit_depth_points)
 
         ind_top = np.argmin(np.abs(fit_depth_points-depth_set[1]))
@@ -34,8 +34,8 @@ def calculatePotential(depth_set, volt_set, fit_depth_points, model):
         volts[0:ind_top] = volt_set[1] + squares/np.amax(squares) * (volt_set[0]-volt_set[1])
 
         ind_bottom = np.argmin(np.abs(fit_depth_points-depth_set[2]))
-        squares = np.square(fit_depth_points[ind_bottom:-1] - depth_set[2])
-        volts[ind_bottom:-1] = volt_set[2] + squares/np.amax(squares) * (volt_set[3]-volt_set[2])
+        squares = np.square(fit_depth_points[ind_bottom:] - depth_set[2])
+        volts[ind_bottom:] = volt_set[2] + squares/np.amax(squares) * (volt_set[3]-volt_set[2])
 
         volts[ind_top:ind_bottom] = np.interp(fit_depth_points[ind_top:ind_bottom], depth_set, volt_set)
 

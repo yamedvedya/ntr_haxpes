@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from optparse import OptionParser
 from src.ntr_data_fitting.gradient_mesh import Gradient_Mesh_Solver
 from src.ntr_data_fitting.lmfit_solver import LMFit_Potential_Solver
 from src.ntr_data_fitting.pysot_solver import PySOT_Potential_Solver
@@ -12,7 +11,6 @@ from src.ntr_data_fitting.potential_models import calculatePotential
 from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-from distutils.util import strtobool
 import pickle
 import os
 
@@ -51,6 +49,8 @@ class NTR_fitter():
     sim_shifts_plot = None
     source_intensity_plot = None
     sim_intensity_plot = None
+
+    _last_sim_potential = {}
 
     # ----------------------------------------------------------------------
     def __init__(self, gui=None):
@@ -178,13 +178,10 @@ class NTR_fitter():
     # ----------------------------------------------------------------------
     def request_sw_from_server(self):
 
-        try:
-            self.sw = get_sw_from_server(self.settings, self.structure, self._directory)
-            self.intensity_solver.add_sw_to_history(self.structure, self.sw)
-            if not self.STAND_ALONE_MODE:
-                self.gui.update_sw_srb(self.intensity_solver.len_sw_history)
-        except RuntimeError as err:
-            self.gui.error_queue.put(err)
+        self.sw = get_sw_from_server(self.settings, self.structure, self._directory)
+        self.intensity_solver.add_sw_to_history(self.structure, self.sw)
+        if not self.STAND_ALONE_MODE:
+            self.gui.update_sw_srb(self.intensity_solver.len_sw_history)
 
     # ----------------------------------------------------------------------
     def request_sw_from_history(self, index):
@@ -199,15 +196,10 @@ class NTR_fitter():
         self.sw = get_sw(sw_file)
         self.intensity_solver.add_sw_to_history(self.structure, self.sw)
 
-    # ----------------------------------------------------------------------
-    def set_model(self, model):
-
-        self.potential_model = model
-
-        self.data_set_for_fitting['model'] = model
-
-    # ----------------------------------------------------------------------
+     # ----------------------------------------------------------------------
     def sim_profile_shifts(self, d_set, v_set):
+
+        self._last_sim_potential = {'d_set': d_set, 'v_set': v_set}
 
         d_set += self.data_set_for_fitting['fit_depth_points'][0]
 
@@ -216,13 +208,9 @@ class NTR_fitter():
             d_set[ind] += 1e-10
 
         volts_values = calculatePotential(d_set, v_set, self.data_set_for_fitting['fit_depth_points'],
-                                          self.data_set_for_fitting['model'])
+                                          self.potential_model['code'])
 
-        self.data_set_for_fitting['fit_spectra_set'] = generate_fit_set(self.data_set_for_fitting['ref_spectra'],
-                                                                 self.data_set_for_fitting['fit_depth_points'],
-                                                                 self.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                                                        self.sw, self.settings['LAMBDA']*1e-9)
-
+        self._prepare_data_set_for_fit()
         shifts, _ = get_shifts(self.data_set_for_fitting, d_set, v_set)
 
         self.potential_plot.setData((self.data_set_for_fitting['fit_depth_points'] -
@@ -257,8 +245,22 @@ class NTR_fitter():
                      'settings': self.settings, 'data_set_for_fitting': self.data_set_for_fitting,
                      'structure': self.structure, 'potential_model': self.potential_model,
                      'angle_shift': self.angle_shift, 'be_shift': self._be_shift, 't_val': self.t_val,
-                     'functional_layer': self.functional_layer,
+                     'functional_layer': self.functional_layer, '_last_sim_potential': self._last_sim_potential,
                      }, f, pickle.HIGHEST_PROTOCOL)
+
+    # ----------------------------------------------------------------------
+    def dump_fit_set(self, file_name, fit_type=None, generate_data_set=True, start_values=None):
+
+        if generate_data_set:
+            self._prepare_data_set_for_fit()
+
+        with open(file_name, 'wb') as f:
+            pickle.dump({'_sample_name': self._sample_name, 'sw': self.sw, 'fit_type': fit_type,
+                         'settings': self.settings, 'data_set_for_fitting': self.data_set_for_fitting,
+                         'structure': self.structure, 'potential_model': self.potential_model,
+                         'angle_shift': self.angle_shift, 'be_shift': self._be_shift, 't_val': self.t_val,
+                         'functional_layer': self.functional_layer,
+                         'start_values': start_values}, f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------
     def restore_session(self, fr, directory):
@@ -282,28 +284,11 @@ class NTR_fitter():
             self.sim_profile_intensity()
 
     # ----------------------------------------------------------------------
-    def dump_fit_set(self, file_name, fit_type=None, generate_data_set=True, start_values=None):
-
-        if generate_data_set:
-            self.data_set_for_fitting['fit_spectra_set'] = generate_fit_set(self.data_set_for_fitting['ref_spectra'],
-                                                                     self.data_set_for_fitting['fit_depth_points'],
-                                                                     self.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                                                     self.sw, self.settings['LAMBDA']*1e-9)
-
-        with open(file_name, 'wb') as f:
-            pickle.dump({'_sample_name': self._sample_name, 'fit_type': fit_type, 'sw': self.sw,
-                         'data_set_for_fitting': self.data_set_for_fitting,
-                         'settings': self.settings, 'structure': self.structure, 'angle_shift': self.angle_shift,
-                         'be_shift': self._be_shift, 't_val': self.t_val,
-                         'start_values': start_values}, f, pickle.HIGHEST_PROTOCOL)
-
-    # ----------------------------------------------------------------------
     def manual_angle_correction(self, angle):
 
         self.angle_shift = angle
         self.data_set_for_fitting['spectroscopic_data'][:, 0] = self._original_spectroscopy_data[:, 0].copy() + self.angle_shift
         self._update_source_plots()
-
 
     # ----------------------------------------------------------------------
     def correct_intensity(self):
@@ -365,6 +350,14 @@ class NTR_fitter():
         return 'pot'
 
     # ----------------------------------------------------------------------
+    def _prepare_data_set_for_fit(self):
+        self.data_set_for_fitting['fit_spectra_set'] = generate_fit_set(self.data_set_for_fitting['ref_spectra'],
+                                                                        self.data_set_for_fitting['fit_depth_points'],
+                                                                        self.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                                                        self.sw, self.settings['LAMBDA']*1e-9)
+        self.data_set_for_fitting['model_code'] = self.potential_model['code']
+
+    # ----------------------------------------------------------------------
     def do_potential_fit(self, start_values):
 
         self.fit_in_progress = True
@@ -377,11 +370,7 @@ class NTR_fitter():
             self.sidx.on_changed(self.potential_solver.show_results)
             self.potential_solver.prepare_stand_alone_plots()
 
-        self.data_set_for_fitting['fit_spectra_set'] = generate_fit_set(self.data_set_for_fitting['ref_spectra'],
-                                                                 self.data_set_for_fitting['fit_depth_points'],
-                                                                 self.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                                                 self.sw, self.settings['LAMBDA']*1e-9)
-
+        self._prepare_data_set_for_fit()
         self._fit_name = self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
 
         self.potential_solver.do_fit(start_values)
@@ -397,18 +386,3 @@ class NTR_fitter():
     def stop_fit(self):
 
         self.fit_in_progress = False
-
-# ----------------------------------------------------------------------
-if __name__ == "__main__":
-    parser = OptionParser()
-    parser.add_option("-s", "--data_set", dest="data_set")
-    parser.add_option("-p", "--plot", dest="do_plot", default=False)
-    (options, _) = parser.parse_args()
-    if options.data_set:
-        fitter = NTR_fitter()
-        if options.do_plot:
-            fitter.DO_PLOT = strtobool(options.do_plot)
-        else:
-            fitter.DO_PLOT = False
-        start_values = fitter.load_fit_set(options.data_set)
-        fitter.do_potential_fit(start_values)

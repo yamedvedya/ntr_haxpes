@@ -67,7 +67,6 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.settings_window.fill_combos(self.ntr_fitter.METHODS)
 
         self._working_dir = os.getcwd()
-        self._parse_options(options)
         self._connect_actions()
         self._make_default_intensity_fit_graphics()
         self._make_default_potential_fit_graphics()
@@ -137,17 +136,18 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.settings_window.settings_changed.connect(self._settings_changed)
         self._ui.b_select_file.clicked.connect(self._load_file_clicked)
 
-        self._ui.p_cb_cmb_model.currentIndexChanged.connect(self._potential_model_selected)
-        self._ui.p_sb_deg_freedom.valueChanged.connect(self._change_degrees)
+        self._ui.p_cb_cmb_model.currentIndexChanged.connect(lambda: self._potential_model_selected(True))
+        self._ui.p_sb_deg_freedom.valueChanged.connect(lambda: self._change_degrees(True))
 
         self._ui.p_but_pot_fit.clicked.connect(self._start_stop_pot_fit)
-        self._ui.p_but_prepare_fit_set.clicked.connect(self._prepare_potential_fit_fit_set)
+        self._ui.p_but_prepare_fit_set.clicked.connect(self._prepare_potential_fit_set)
         self._ui.p_chk_correction.stateChanged.connect(lambda state: self._correct_intensity(state))
         self._ui.p_sb_max_potential.valueChanged.connect(self._change_potential_fit_v_range)
         self._ui.p_srb_cycle.valueChanged.connect(self._display_potential_fit_cycle)
 
         self._ui.i_but_simulate.clicked.connect(self._sim_intensity)
         self._ui.i_but_start_fit.clicked.connect(self._i_start_fit)
+        self._ui.i_but_stop_fit.clicked.connect(self._i_stop_fit)
         self._ui.i_dsp_shift.valueChanged.connect(lambda value: self.ntr_fitter.manual_angle_correction(value))
         self._ui.i_but_revert_structure.clicked.connect(self._restore_layers)
         self._ui.i_scr_history.valueChanged.connect(lambda value: self._recall_sw(value))
@@ -193,29 +193,6 @@ class NTR_Window(QtWidgets.QMainWindow):
             self._potential_model_edited()
 
     # ----------------------------------------------------------------------
-    def _parse_options(self, options):
-
-        if hasattr(options, 'data_file'):
-            if options.data_file and options.set:
-                self._ui.l_folder.setText(options.data_file)
-                self._working_file = options.data_file
-                self._get_data_sets()
-                if hasattr(options, 'set'):
-                    if refresh_combo_box(self._ui.cb_experimental_set, options.set):
-                        self._working_set = options.set
-                        self.ntr_fitter.set_new_data_file(options.data_file, options.set)
-                        self._ui.tab_mode.setEnabled(True)
-
-                    if hasattr(options, 'sw_file'):
-                        if options.sw_file:
-                            self.ntr_fitter.set_sw_form_file(options.sw_file)
-                            self._ui.tab_mode.setEnabled(True)
-
-                            if hasattr(options, 'model') and hasattr(options, 'n_points'):
-                                if self._set_potential_fit_initial_model(options.model, options.n_points):
-                                    self.ntr_fitter.set_model(self._current_model)
-
-    # ----------------------------------------------------------------------
     def _load_file_clicked(self):
 
         self._block_potential_fit_signals(True)
@@ -235,7 +212,6 @@ class NTR_Window(QtWidgets.QMainWindow):
                 if fit_type == 'pot':
                     self._set_potential_fit_initial_model(self.ntr_fitter.potential_model['code'],
                                                           self.ntr_fitter.potential_model['num_depth_dof'])
-                    self._potential_model_selected()
                     self.fit_pot_graphs_layout.clear()
                     self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
                     self._display_potential_fit_cycle()
@@ -284,7 +260,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     def _load_data(self, data, file_name):
         self._ui.tab_mode.setEnabled(True)
         self.ntr_fitter.set_spectroscopy_data(data, file_name= file_name)
-        self._potential_model_selected()
+        self._potential_model_selected(True)
 
     # ----------------------------------------------------------------------
     def _new_set_selected(self):
@@ -306,12 +282,19 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self._ui.tab_potential.setEnabled(self.ntr_fitter.sw_synchronized)
 
-        if self._intensity_worker_state != 'idle':
+        if self._intensity_worker_state == 'sim':
             self._ui.i_but_simulate.setText('In progress...')
             self._ui.i_but_simulate.setEnabled(False)
+            self._ui.i_but_start_fit.setEnabled(False)
+        elif self._intensity_worker_state == 'fit':
+            self._ui.i_but_simulate.setEnabled(False)
+            self._ui.i_but_start_fit.setEnabled(False)
+            self._ui.i_but_stop_fit.setEnabled(True)
         else:
             self._ui.i_but_simulate.setText('Simulate')
             self._ui.i_but_simulate.setEnabled(True)
+            self._ui.i_but_start_fit.setEnabled(True)
+            self._ui.i_but_stop_fit.setEnabled(False)
 
         if self._spectra_worker_state != 'idle':
             self._ui.s_cmd_fit_one.setEnabled(False)
@@ -387,7 +370,8 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         if functional_peak_name is not None:
             self.ntr_fitter.set_spectroscopy_data(self.spectra_fitter.collect_data_for_fitter(functional_peak_name),
-                                                  sample_name=self._working_file, directory=self._working_dir)
+                                                  sample_name=os.path.splitext(os.path.basename(self._working_file))[0],
+                                                  directory=self._working_dir)
 
     # ----------------------------------------------------------------------
     def _cut_range_to_all(self):
@@ -658,6 +642,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             peaks_info.append(record[1].get_values())
 
         return bg_params, peaks_info
+
     # ----------------------------------------------------------------------
     def _sim_spectra(self):
         index = self._ui.s_scr_spectra.value()
@@ -687,7 +672,10 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._spectra_worker_state = 'working'
         bg_params, peaks_info = self._collect_components_model()
         self.spectra_fitter.set_peak_params(indexes, bg_params, peaks_info)
-        self.spectra_fitter.fit(indexes)
+        try:
+            self.spectra_fitter.fit(indexes)
+        except Exception as err:
+            self.error_queue.put(err)
         self._show_params(self._ui.s_scr_spectra.value())
         self.spectra_fitter.plot_spectra(self._ui.s_scr_spectra.value())
         self._spectra_worker_state = 'idle'
@@ -786,6 +774,10 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._intensity_worker.start()
 
     # ----------------------------------------------------------------------
+    def _i_stop_fit(self):
+        self.ntr_fitter.stop_fit()
+
+    # ----------------------------------------------------------------------
     def _intensity_fit_worker(self):
         self._ui.p_l_fit_history.clear()
         self._update_structure()
@@ -793,7 +785,18 @@ class NTR_Window(QtWidgets.QMainWindow):
         for ind, widget in enumerate(self._layers_widgets):
             param_list += widget.get_fittable_parameters()
         if param_list:
-            self.ntr_fitter.do_intensity_fit(param_list)
+            try:
+                self._intensity_worker_state = 'fit'
+                self.ntr_fitter.do_intensity_fit (param_list)
+            except Exception as err:
+                self.error_queue.put(err)
+            finally:
+                self._intensity_worker_state = 'idle'
+            if self._ui.i_scr_history.value() != self._ui.i_scr_history.maximum():
+                self._ui.i_scr_history.setValue(self._ui.i_scr_history.maximum())
+            else:
+                self._recall_sw(-1)
+
         else:
             self.error_queue.put('No fit parameters found!')
 
@@ -806,7 +809,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _intensity_sim_worker(self):
 
-        self._intensity_worker_state = 'run'
+        self._intensity_worker_state = 'sim'
         try:
             if not self.ntr_fitter.sw_synchronized:
                 self._update_structure()
@@ -882,9 +885,28 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._ui.p_sb_max_potential.setValue(self.settings['VOLT_MAX'])
 
         if self.ntr_fitter.potential_model:
-            self._set_potential_fit_initial_model(self.ntr_fitter.potential_model['code'],
-                                                  self.ntr_fitter.potential_model['num_depth_dof'])
+            for model in self.list_of_models:
+                if model['code'] == self.ntr_fitter.potential_model['code']:
+                    if refresh_combo_box(self._ui.p_cb_cmb_model, model['name']):
+                        self._ui.p_sb_deg_freedom.setValue(self.ntr_fitter.potential_model['num_depth_dof']
+                                                           - self.ntr_fitter.potential_model['only_voltage_dof'])
+                        self._potential_model_selected(False)
 
+        try:
+            counter = 1
+            for widget in self._potential_model_widgets:
+                if isinstance(widget, TopBottomPotential):
+                    widget.set_values((self.ntr_fitter._last_sim_potential['v_set'][0],
+                                       self.ntr_fitter._last_sim_potential['v_set'][-1]))
+                elif isinstance(widget, BreakingPoint):
+                    widget.set_values(((self.ntr_fitter._last_sim_potential['d_set'][counter] -
+                                       self.ntr_fitter._last_sim_potential['d_set'][0])*1e10,
+                                       self.ntr_fitter._last_sim_potential['v_set'][counter]))
+                    counter = counter + 1
+        except:
+            pass
+
+        self._potential_model_edited()
         self._block_potential_fit_signals(False)
     # ----------------------------------------------------------------------
     def _block_potential_fit_signals(self, flag):
@@ -937,8 +959,8 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _update_potential_widgets(self):
         for widget in self._potential_model_widgets:
-            if hasattr(widget, 'change_layer_thichness'):
-                widget.change_layer_thichness(self.ntr_fitter.structure[self.ntr_fitter.functional_layer]['thick'])
+            if hasattr(widget, 'change_layer_thickness'):
+                widget.change_layer_thickness(self.ntr_fitter.structure[self.ntr_fitter.functional_layer]['thick'])
 
     # ----------------------------------------------------------------------
     def _change_potential_fit_v_range(self):
@@ -954,38 +976,23 @@ class NTR_Window(QtWidgets.QMainWindow):
             self._ui.p_cb_cmb_model.addItem(model['name'])
 
     # ----------------------------------------------------------------------
-    def _set_potential_fit_initial_model(self, set_model, points=None):
+    def _change_degrees(self, do_refresh):
 
-        for model in self.list_of_models:
-            if model['code'] == set_model:
-                if refresh_combo_box(self._ui.p_cb_cmb_model, model['name']):
-                    self._potential_model_selected()
-
-                if points:
-                    self._ui.p_sb_deg_freedom.setValue(int(points) - self._current_model['only_voltage_dof'])
-                    self._change_degrees()
-
-                return True
-        return False
-
-    # ----------------------------------------------------------------------
-    def _change_degrees(self):
-
-        self._current_model['num_depth_dof'] = int(self._ui.p_sb_deg_freedom.value())
-        if self._current_model['num_depth_dof'] + 1 > len(self._potential_model_widgets):
-            for point in range(self._current_model['num_depth_dof'] - len(self._potential_model_widgets) + 1):
-                for widget in self._current_model['additional_widgets']:
+        self.ntr_fitter.potential_model['num_depth_dof'] = int(self._ui.p_sb_deg_freedom.value())
+        if self.ntr_fitter.potential_model['num_depth_dof'] + 1 > len(self._potential_model_widgets):
+            for point in range(self.ntr_fitter.potential_model['num_depth_dof'] - len(self._potential_model_widgets) + 1):
+                for widget in self.ntr_fitter.potential_model['additional_widgets']:
                     self._potential_model_widgets.append(self._get_potential_fit_widget(widget, point + len(self._potential_model_widgets)))
         else:
-            for _ in range(len(self._potential_model_widgets) - self._current_model['num_depth_dof'] - 1):
-                for _ in self._current_model['additional_widgets']:
+            for _ in range(len(self._potential_model_widgets) - self.ntr_fitter.potential_model['num_depth_dof'] - 1):
+                for _ in self.ntr_fitter.potential_model['additional_widgets']:
                     del self._potential_model_widgets[-1]
 
         self._update_layout(self._ui.p_wc_deg_freedom, self._potential_model_widgets)
 
         start_depths = np.linspace(0, self.ntr_fitter.structure[self.ntr_fitter.functional_layer]['thick'],
-                                   self._current_model['num_depth_dof'] +
-                                   self._current_model['only_voltage_dof'])
+                                   self.ntr_fitter.potential_model['num_depth_dof'] +
+                                   self.ntr_fitter.potential_model['only_voltage_dof'])
 
         counter = 1
         for widget in self._potential_model_widgets:
@@ -994,20 +1001,21 @@ class NTR_Window(QtWidgets.QMainWindow):
                 widget.set_values((start_depths[counter], raw_ans[0][1]))
                 counter = counter + 1
 
-        self._potential_model_edited()
+        if do_refresh:
+            self._potential_model_edited()
     # ----------------------------------------------------------------------
-    def _potential_model_selected(self):
+    def _potential_model_selected(self, do_refresh):
 
         selected_model = str(self._ui.p_cb_cmb_model.currentText())
         for model in self.list_of_models:
             if model['name'] == selected_model:
                 self._block_potential_fit_signals(True)
                 self._potential_model_widgets = []
-                self._current_model = model
-                self._ui.p_sb_deg_freedom.setValue(self._current_model['num_depth_dof'])
-                self._ui.p_sb_deg_freedom.setEnabled(not self._current_model['fixed_depth_dof'])
+                self.ntr_fitter.potential_model = model
+                self._ui.p_sb_deg_freedom.setValue(self.ntr_fitter.potential_model['num_depth_dof'])
+                self._ui.p_sb_deg_freedom.setEnabled(not self.ntr_fitter.potential_model['fixed_depth_dof'])
                 self._potential_model_widgets.append(self._get_potential_fit_widget(model['default_widget']))
-                self._change_degrees()
+                self._change_degrees(do_refresh)
                 self._block_potential_fit_signals(False)
 
     # ----------------------------------------------------------------------
@@ -1029,6 +1037,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _get_potential_fit_variable_values(self):
+
         new_set = []
         for widget in self._potential_model_widgets:
             raw_ans = widget.getValues()
@@ -1042,8 +1051,6 @@ class NTR_Window(QtWidgets.QMainWindow):
     def _potential_model_edited(self):
 
         new_set = self._get_potential_fit_variable_values()
-
-        self.ntr_fitter.set_model(self._current_model)
 
         if self.ntr_fitter.sw:
             self.ntr_fitter.sim_profile_shifts(new_set[:, 0], new_set[:, 1])
@@ -1089,7 +1096,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             if isinstance(widget, TopBottomPotential):
                 widget.set_values((best_solution[1][0], best_solution[1][-1]))
             elif isinstance(widget, BreakingPoint):
-                widget.set_values((best_solution[0][counter] - best_solution[0][0], best_solution[1][counter]))
+                widget.set_values(((best_solution[0][counter] - best_solution[0][0])*1e9, best_solution[1][counter]))
                 counter = counter + 1
 
         self._block_potential_fit_signals(False)
@@ -1112,7 +1119,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             pass
 
     # ----------------------------------------------------------------------
-    def _prepare_potential_fit_fit_set(self):
+    def _prepare_potential_fit_set(self):
         new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Create file", self._working_dir, '.set')
         if new_file:
             if '.set' in new_file[0]:

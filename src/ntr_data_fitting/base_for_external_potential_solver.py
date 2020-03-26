@@ -177,7 +177,7 @@ class Base_For_External_Potential_Solver():
 
         last_best_potential = calculatePotential(depth_set, volt_set,
                                                  self.parent.data_set_for_fitting['fit_depth_points'],
-                                                 self.parent.data_set_for_fitting['model'])
+                                                 self.parent.potential_model['code'])
 
         self.potential_graphs_history.append(last_best_potential)
 
