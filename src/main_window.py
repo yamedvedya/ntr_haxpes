@@ -210,7 +210,7 @@ class NTR_Window(QtWidgets.QMainWindow):
                 self._ui.cb_experimental_set.setEnabled(False)
                 self.ntr_fitter.potential_solver.reset_fit()
                 fit_type = self.ntr_fitter.load_fit_res(new_file[0][0])
-                self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
+                self._prepare_potential_fit_fit_graphs()
                 if fit_type == 'pot':
                     self._restore_model(False)
                     if hasattr(self.ntr_fitter.potential_solver, "best_ksi"):
@@ -693,10 +693,12 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def add_message_to_fit_history(self, msg):
+
         self._ui.p_l_fit_history.addItem(msg)
 
     # ----------------------------------------------------------------------
     def update_sw_srb(self, num_sws):
+
         if num_sws > 0:
             self._ui.i_scr_history.setEnabled(True)
             self._ui.i_scr_history.setMaximum(num_sws-1)
@@ -727,11 +729,13 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _correct_intensity(self, state):
+
         self.ntr_fitter.intensity_correction = state
         self.ntr_fitter.correct_intensity()
 
     # ----------------------------------------------------------------------
     def _recall_sw(self, ind):
+
         self.ntr_fitter.request_sw_from_history(ind)
         self._restore_layers()
 
@@ -786,6 +790,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _intensity_fit_worker(self):
+
         self._ui.p_l_fit_history.clear()
         self._update_structure()
         param_list = []
@@ -1067,15 +1072,15 @@ class NTR_Window(QtWidgets.QMainWindow):
     def _prepare_potential_fit_fit_graphs(self):
 
         self.fit_pot_graphs_layout.clear()
+        self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
 
     # ----------------------------------------------------------------------
     def _start_stop_pot_fit(self):
 
         if self._potential_worker_state == 'idle':
             self._ui.p_but_pot_fit.setText('Stop')
-            self.fit_pot_graphs_layout.clear()
+            self._prepare_potential_fit_fit_graphs()
             self.ntr_fitter.potential_solver.reset_fit()
-            self.ntr_fitter.potential_solver.set_external_graphs(self.fit_pot_graphs_layout)
 
             self._potential_worker = ExcThread(self._fitter_potential_fit_worker, 'fitter_worker', self.error_queue)
             self._potential_worker.start()
@@ -1120,9 +1125,8 @@ class NTR_Window(QtWidgets.QMainWindow):
                 if isinstance(widget, TopBottomPotential):
                     widget.set_values((solution[1][0], solution[1][-1]))
                 elif isinstance(widget, BreakingPoint):
-                    widget.set_values((solution[0][counter] - solution[0][0], solution[1][counter]))
+                    widget.set_values(((solution[0][counter] - solution[0][0])*1e9, solution[1][counter]))
                     counter = counter + 1
-
         except:
             pass
 
