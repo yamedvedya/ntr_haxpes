@@ -315,7 +315,7 @@ class Gradient_Mesh_Solver():
                 self.plot_statistics(self.d_graphs_stack[point], self.d_set[point] -
                                      self.parent.data_set_for_fitting['fit_depth_points'][0], statistics)
 
-            full_statistics = np.vstack((self.d_set[point], statistics))
+            full_statistics = np.vstack((self.d_set[point] - self.parent.data_set_for_fitting['fit_depth_points'][0], statistics))
             self.local_data_set['statistics']["D_points"][point] = full_statistics
             self.d_graphs_history[point].append(full_statistics)
             self.d_set[point] = new_set
