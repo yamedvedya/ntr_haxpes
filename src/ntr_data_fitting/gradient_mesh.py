@@ -348,11 +348,9 @@ class Gradient_Mesh_Solver():
         if mode == 'volt_point':
             mesh = self.parent.settings['V_MESH']
             step = self.parent.settings['V_STEP']
-            x_shift = 0.0
         else:
             mesh = self.parent.settings['D_MESH']
             step = self.parent.settings['D_STEP']*1e-9
-            x_shift = limits[0]
 
         limits[0] += step
         limits[1] -= step
@@ -417,7 +415,7 @@ class Gradient_Mesh_Solver():
             if local_job_range == None:
                 break
 
-            print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
+            # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
             mse_list = np.reshape(np.frombuffer(result_array), local_data_set['fit_points'])
 
             for ind in range(local_job_range[0], local_job_range[1]):
@@ -441,11 +439,12 @@ class Gradient_Mesh_Solver():
     # ----------------------------------------------------------------------
     def do_fit(self, start_values):
 
+        worker_start_time = time.time()
         self._generate_start_set(start_values)
         self.cycle = 0
         result_found = False
 
-        while self.parent.fit_in_progress and not result_found and self.cycle <10:
+        while self.parent.fit_in_progress and not result_found and time.time() < worker_start_time + 3600:
             start_time = time.time()
             self._get_fit_set()
 
