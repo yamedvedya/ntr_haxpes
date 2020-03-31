@@ -1109,7 +1109,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             if isinstance(widget, TopBottomPotential):
                 widget.set_values((best_solution[1][0], best_solution[1][-1]))
             elif isinstance(widget, BreakingPoint):
-                widget.set_values(((best_solution[0][counter] - best_solution[0][0])*1e9, best_solution[1][counter]))
+                widget.set_values(((best_solution[0][counter] - best_solution[0][0])*1e10, best_solution[1][counter]))
                 counter = counter + 1
 
         self._block_potential_fit_signals(False)
@@ -1125,7 +1125,7 @@ class NTR_Window(QtWidgets.QMainWindow):
                 if isinstance(widget, TopBottomPotential):
                     widget.set_values((solution[1][0], solution[1][-1]))
                 elif isinstance(widget, BreakingPoint):
-                    widget.set_values(((solution[0][counter] - solution[0][0])*1e9, solution[1][counter]))
+                    widget.set_values(((solution[0][counter] - solution[0][0])*1e10* solution[1][counter]))
                     counter = counter + 1
         except:
             pass

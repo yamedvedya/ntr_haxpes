@@ -2,8 +2,10 @@ from src.ntr_data_fitting.subfunctions import *
 from src.ntr_data_fitting.potential_models import calculatePotential
 import matplotlib.pyplot as plt
 import ctypes
+import json
 from scipy import stats
 import multiprocessing as mp
+from mpi4py import MPI
 import look_and_feel as lookandfeel
 import time
 
@@ -408,15 +410,16 @@ class Gradient_Mesh_Solver():
         return np.array(calculated_set), np.array(t_statistics), solution_found
 
     # ----------------------------------------------------------------------
-    def _mse_calculator(self, data_set_for_fitting, local_data_set, tasks_queue, result_array):
+    def _mse_calculator(self, data_set_for_fitting, local_data_set, tasks_queue,
+                        result_array, num_local_tasks, start_task_index):
 
         while True:
             local_job_range = tasks_queue.get()
+            # print('Mse calculator tasks {}'.format(local_job_range))
             if local_job_range == None:
                 break
 
-            # print ('Got tasks form {} to {}'.format(local_job_range[0], local_job_range[1]))
-            mse_list = np.reshape(np.frombuffer(result_array), local_data_set['fit_points'])
+            mse_list = np.reshape(np.frombuffer(result_array), num_local_tasks)
 
             for ind in range(local_job_range[0], local_job_range[1]):
                 depth_set = local_data_set['depthset'][:, ind]
@@ -424,13 +427,48 @@ class Gradient_Mesh_Solver():
                 shifts, _ = get_shifts(data_set_for_fitting, depth_set, volt_set)
                 if shifts is not None:
                     shifts -= data_set_for_fitting['spectroscopic_data'][:, 2]
-                    mse_list[ind] = np.inner(shifts, shifts)
+                    mse_list[ind - start_task_index] = np.inner(shifts, shifts)
                 else:
-                    mse_list[ind] = 1e6
+                    mse_list[ind - start_task_index] = 1e6
 
             tasks_queue.task_done()
 
         tasks_queue.task_done()
+
+    # ----------------------------------------------------------------------
+    def _node_worker(self, local_task_list):
+
+        print('Node worker got tasks {}'.format(local_task_list))
+
+        node_cpu = mp.cpu_count()
+        node_task_sets = self.parent.settings['N_SUB_JOBS'] * node_cpu
+        num_local_tasks = local_task_list[1] - local_task_list[0]
+
+        mse_list = mp.RawArray(ctypes.c_double, num_local_tasks)
+
+        stop_points = np.ceil(np.linspace(local_task_list[0], local_task_list[1], node_task_sets + 1))
+        jobs_list = []
+
+        for i in range(node_task_sets):
+            jobs_list.append((int(stop_points[i]), int(min(stop_points[i + 1], local_task_list[1]))))
+
+        jobs_queue = mp.JoinableQueue()
+        for job in jobs_list:
+            jobs_queue.put(job)
+        for _ in range(node_cpu):
+            jobs_queue.put(None)
+
+        workers = []
+        for i in range(node_cpu):
+            worker = mp.Process(target=self._mse_calculator,
+                                args=(self.parent.data_set_for_fitting, self.local_data_set,
+                                      jobs_queue, mse_list, num_local_tasks, local_task_list[0]))
+            workers.append(worker)
+            worker.start()
+        print('All workers started')
+        jobs_queue.join()
+
+        return np.reshape(np.frombuffer(mse_list), num_local_tasks)
 
     # ----------------------------------------------------------------------
     def get_data_for_save(self):
@@ -444,7 +482,11 @@ class Gradient_Mesh_Solver():
         self.cycle = 0
         result_found = False
 
-        while self.parent.fit_in_progress and not result_found and time.time() < worker_start_time + 3600:
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size()
+
+        while self.parent.fit_in_progress and not result_found:
             start_time = time.time()
             self._get_fit_set()
 
@@ -454,33 +496,27 @@ class Gradient_Mesh_Solver():
 
             if self.parent.settings['MULTIPROCESSING']:
 
-                n_cpu = mp.cpu_count()
-                n_tasks = self.parent.settings['N_SUB_JOBS'] * n_cpu
+                print('Total tasks {}'.format(self.local_data_set['fit_points']))
+                num_cores = comm.gather(mp.cpu_count(), root=0)
 
-                mse_list = mp.RawArray(ctypes.c_double, self.local_data_set['fit_points'])
+                if rank == 0:
+                    print("-- Got the following cpus set: {}".format(num_cores))
+                    total_cpus = int(np.sum(num_cores))
+                    task_list_per_cpu = np.ceil(np.linspace(0, self.local_data_set['fit_points'], total_cpus + 1))
+                    start_points = np.append(np.array([0]), np.cumsum(num_cores))
+                    jobs_list = []
 
-                stop_points = np.ceil(np.linspace(0, self.local_data_set['fit_points'], n_tasks + 1))
-                jobs_list = []
+                    for i in range(size):
+                        jobs_list.append(json.dumps((int(task_list_per_cpu[start_points[i]]),
+                                                     int(task_list_per_cpu[start_points[i + 1]]))))
+                else:
+                    jobs_list = None
 
-                for i in range(n_tasks):
-                    jobs_list.append((int(stop_points[i]), int(min(stop_points[i + 1], self.local_data_set['fit_points']))))
-
-                jobs_queue = mp.JoinableQueue()
-                for job in jobs_list:
-                    jobs_queue.put(job)
-                for _ in range(n_cpu):
-                    jobs_queue.put(None)
-
-                workers = []
-                for i in range(n_cpu):
-                    worker = mp.Process(target=self._mse_calculator,
-                                        args=(self.parent.data_set_for_fitting, self.local_data_set, jobs_queue, mse_list))
-                    workers.append(worker)
-                    worker.start()
-                print('All workers started')
-                jobs_queue.join()
-
-                self.local_data_set['mse'] = np.reshape(np.frombuffer(mse_list), self.local_data_set['fit_points'])
+                recvbuf = comm.scatter(jobs_list, root=0)
+                local_result = self._node_worker(json.loads(recvbuf))
+                final_result = comm.gather(local_result, root=0)
+                if rank == 0:
+                    self.local_data_set['mse'] = np.concatenate(final_result)
             else:
                 for ind in range(self.local_data_set['fit_points']):
                     depth_set = self.local_data_set['depthset'][:, ind]
@@ -492,29 +528,30 @@ class Gradient_Mesh_Solver():
                     else:
                         self.local_data_set['mse'][ind] = 1e6
 
-            error_cycle_time = time.time() - start_time
-            try:
-                time_pre_point = np.round(error_cycle_time / self.local_data_set['fit_points'], 6)
-            except:
-                time_pre_point = 0
+            if rank == 0:
+                error_cycle_time = time.time() - start_time
+                try:
+                    time_pre_point = np.round(error_cycle_time / self.local_data_set['fit_points'], 6)
+                except:
+                    time_pre_point = 0
 
-            print('Error calculation time: {}, time per point: {}'.format(error_cycle_time, time_pre_point))
+                print('Error calculation time: {}, time per point: {}'.format(error_cycle_time, time_pre_point))
 
-            start_time = time.time()
-            self._plot_result()
-            result_found = self._analyse_results()
-            self.parent.save_fit_res()
-            print('Plot and save time: {}'.format(time.time() - start_time))
+                start_time = time.time()
+                self._plot_result()
+                result_found = self._analyse_results()
+                self.parent.save_fit_res()
+                print('Plot and save time: {}'.format(time.time() - start_time))
 
-            self.cycle += 1
-            print('Cycle {} completed'.format(self.cycle))
+                self.cycle += 1
+                print('Cycle {} completed'.format(self.cycle))
 
-            if self.parent.STAND_ALONE_MODE:
-                if self.parent.DO_PLOT:
-                    plt.draw()
-                    plt.gcf().canvas.flush_events()
-            else:
-                self.parent.gui.update_potential_fit_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
+                if self.parent.STAND_ALONE_MODE:
+                    if self.parent.DO_PLOT:
+                        plt.draw()
+                        plt.gcf().canvas.flush_events()
+                else:
+                    self.parent.gui.update_potential_fit_cycles(self.cycle, self.best_ksi[self.cycle], self.solution_history[self.cycle - 1])
 
         self.cycle -= 1
         plt.ioff()
