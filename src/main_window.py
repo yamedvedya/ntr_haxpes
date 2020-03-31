@@ -256,8 +256,14 @@ class NTR_Window(QtWidgets.QMainWindow):
                     self.ntr_fitter.restore_session(fr, os.path.split(new_file[0][0])[0])
                 self._restore_components()
                 self._reset_functional_peak()
-                self._restore_layers()
-                self._restore_model(True)
+                try:
+                    self._restore_layers()
+                except:
+                    pass
+                try:
+                    self._restore_model(True)
+                except:
+                    pass
             else:
                 raise RuntimeError('Not implemented')
 
