@@ -6,6 +6,7 @@ from src.general.auxiliary_functions import *
 
 from PyQt5 import QtWidgets, QtCore
 from src.widgets.layer_ui import Ui_layer
+from src.ntr_data_fitting.compounds import COMPAUNDS
 
 # ----------------------------------------------------------------------
 class LayerWidget(QtWidgets.QWidget):
@@ -108,10 +109,9 @@ class LayerWidget(QtWidgets.QWidget):
         for ind in range(3):
             getattr(self._ui, 'cb_material_{}'.format(ind)).addItem('None')
 
-        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'src/ntr_data_fitting/compounds.txt'))
-        for line in f:
+        for compound in COMPAUNDS:
             for ind in range(3):
-                getattr(self._ui, 'cb_material_{}'.format(ind)).addItem(str(line).strip('\n').strip())
+                getattr(self._ui, 'cb_material_{}'.format(ind)).addItem(compound)
 
     # ----------------------------------------------------------------------
     def _change_x0(self):

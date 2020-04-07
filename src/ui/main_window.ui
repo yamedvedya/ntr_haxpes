@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1063</width>
+    <width>1144</width>
     <height>693</height>
    </rect>
   </property>
@@ -15,64 +15,14 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QPushButton" name="b_select_file">
+    <item row="0" column="6">
+     <widget class="QPushButton" name="but_settings">
       <property name="text">
-       <string>Open file</string>
+       <string>Settings</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QLabel" name="l_folder">
-      <property name="minimumSize">
-       <size>
-        <width>200</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="2">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Select experiment set:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QComboBox" name="cb_experimental_set"/>
-    </item>
-    <item row="0" column="4">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>778</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="0" column="5">
-     <widget class="QPushButton" name="but_save_session">
-      <property name="text">
-       <string>Save session</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="7">
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="7">
+    <item row="2" column="0" colspan="9">
      <widget class="QTabWidget" name="tab_mode">
       <property name="enabled">
        <bool>true</bool>
@@ -153,6 +103,33 @@
               </property>
               <property name="sizeType">
                <enum>QSizePolicy::Minimum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="s_but_load_model">
+              <property name="text">
+               <string>Load model</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="s_but_save_model">
+              <property name="text">
+               <string>Save model</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
               <property name="sizeHint" stdset="0">
                <size>
@@ -553,6 +530,25 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="s_lb_angle">
+              <property name="minimumSize">
+               <size>
+                <width>75</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>75</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Angle: </string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -564,26 +560,6 @@
         <string>Intensity</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="1">
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="but_settings_intensity">
-          <property name="text">
-           <string>Intensity fit settings</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
@@ -792,16 +768,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1" rowspan="3" colspan="2">
-         <widget class="QFrame" name="i_plots">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QScrollArea" name="scrollArea">
           <property name="maximumSize">
@@ -831,10 +797,20 @@
              <x>0</x>
              <y>0</y>
              <width>655</width>
-             <height>218</height>
+             <height>423</height>
             </rect>
            </property>
           </widget>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="4" colspan="2">
+         <widget class="QFrame" name="i_plots">
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
          </widget>
         </item>
        </layout>
@@ -973,26 +949,6 @@
           <zorder>p_lb_fit_status</zorder>
          </widget>
         </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="but_settings_potential">
-          <property name="text">
-           <string>Potential fit settings</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <spacer name="horizontalSpacer_2">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>1052</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
         <item row="1" column="1" colspan="2">
          <widget class="QTabWidget" name="tabWidget">
           <property name="currentIndex">
@@ -1014,6 +970,63 @@
       </widget>
      </widget>
     </item>
+    <item row="0" column="3">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Select experiment set:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>778</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="0" column="0">
+     <widget class="QPushButton" name="b_select_file">
+      <property name="text">
+       <string>Open file</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="4">
+     <widget class="QComboBox" name="cb_experimental_set"/>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLabel" name="l_folder">
+      <property name="minimumSize">
+       <size>
+        <width>200</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="9">
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QPushButton" name="but_save_session">
+      <property name="text">
+       <string>Save session</string>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1021,7 +1034,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1063</width>
+     <width>1144</width>
      <height>21</height>
     </rect>
    </property>

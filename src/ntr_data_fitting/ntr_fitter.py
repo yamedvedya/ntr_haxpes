@@ -35,7 +35,7 @@ class NTR_fitter():
     potential_model = None
     functional_layer = None
     angle_shift = None
-    _be_shift = None
+    be_shift = None
     intensity_correction = False
 
     t_val = None
@@ -125,7 +125,7 @@ class NTR_fitter():
     def _update_source_plots(self):
 
         self.source_shifts_plot.setData(self.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                self.data_set_for_fitting['spectroscopic_data'][:, 2])
+                                self.be_shift + self.data_set_for_fitting['spectroscopic_data'][:, 2])
 
         self.source_intensity_plot.setData(self.data_set_for_fitting['spectroscopic_data'][:, 0],
                                 self.data_set_for_fitting['spectroscopic_data'][:, 1])
@@ -142,8 +142,8 @@ class NTR_fitter():
         self._original_spectroscopy_data = data
         self.data_set_for_fitting['spectroscopic_data'] = self._original_spectroscopy_data.copy()
 
-        self._be_shift = np.mean(self.data_set_for_fitting['spectroscopic_data'][:, 2])
-        self.data_set_for_fitting['spectroscopic_data'][:, 2] -= self._be_shift
+        self.be_shift = np.mean(self.data_set_for_fitting['spectroscopic_data'][:, 2])
+        self.data_set_for_fitting['spectroscopic_data'][:, 2] -= self.be_shift
 
         self._update_source_plots()
         self.gui.update_sw_srb(self.intensity_solver.len_sw_history)
@@ -161,8 +161,8 @@ class NTR_fitter():
         self.data_set_for_fitting['spectroscopic_data'][:, 0] += self.angle_shift
         self.data_set_for_fitting['spectroscopic_data'][:, 1] /= np.sum(self.data_set_for_fitting['spectroscopic_data'][:, 1])
 
-        self._be_shift = np.mean(self.data_set_for_fitting['spectroscopic_data'][:, 2])
-        self.data_set_for_fitting['spectroscopic_data'][:, 2] -= self._be_shift
+        self.be_shift = np.mean(self.data_set_for_fitting['spectroscopic_data'][:, 2])
+        self.data_set_for_fitting['spectroscopic_data'][:, 2] -= self.be_shift
 
         self.set_new_functional_layer()
 
@@ -217,9 +217,9 @@ class NTR_fitter():
                           self.data_set_for_fitting['fit_depth_points'][0])*1e9, volts_values)
         if shifts is None:
             self.sim_shifts_plot.setData(self.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                  np.zeros_like(self.data_set_for_fitting['spectroscopic_data'][:, 0]))
+                                  self.be_shift + np.zeros_like(self.data_set_for_fitting['spectroscopic_data'][:, 0]))
         else:
-            self.sim_shifts_plot.setData(self.data_set_for_fitting['spectroscopic_data'][:, 0], shifts)
+            self.sim_shifts_plot.setData(self.data_set_for_fitting['spectroscopic_data'][:, 0], self.be_shift + shifts)
 
     # ----------------------------------------------------------------------
     def sim_profile_intensity(self):
@@ -244,7 +244,7 @@ class NTR_fitter():
                      '_original_spectroscopy_data': self._original_spectroscopy_data,
                      'settings': self.settings, 'data_set_for_fitting': self.data_set_for_fitting,
                      'structure': self.structure, 'potential_model': self.potential_model,
-                     'angle_shift': self.angle_shift, 'be_shift': self._be_shift, 't_val': self.t_val,
+                     'angle_shift': self.angle_shift, 'be_shift': self.be_shift, 't_val': self.t_val,
                      'functional_layer': self.functional_layer, '_last_sim_potential': self._last_sim_potential,
                      }, f, pickle.HIGHEST_PROTOCOL)
 
@@ -258,7 +258,7 @@ class NTR_fitter():
             pickle.dump({'_sample_name': self._sample_name, 'sw': self.sw, 'fit_type': fit_type,
                          'settings': self.settings, 'data_set_for_fitting': self.data_set_for_fitting,
                          'structure': self.structure, 'potential_model': self.potential_model,
-                         'angle_shift': self.angle_shift, 'be_shift': self._be_shift, 't_val': self.t_val,
+                         'angle_shift': self.angle_shift, 'be_shift': self.be_shift, 't_val': self.t_val,
                          'functional_layer': self.functional_layer,
                          'start_values': start_values}, f, pickle.HIGHEST_PROTOCOL)
 
@@ -272,6 +272,7 @@ class NTR_fitter():
             setattr(self, key, loaded_data[key])
             # self.solver.reset_fit()
 
+        self.be_shift = np.mean(self._original_spectroscopy_data[:, 2])
         if 'spectroscopic_data' in self.data_set_for_fitting.keys():
             self._update_source_plots()
 

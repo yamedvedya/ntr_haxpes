@@ -1,6 +1,10 @@
 from PyQt5 import QtCore
 import pyqtgraph as pg
 
+WARNING_STYLE = "background-color: #FFC4C4"
+
+WIDGET_TOLERANCE = 1e-4
+
 CURRENT_POTENTIAL_STYLE = {'pen': pg.mkPen(color=(255, 85, 0), width=2, style=QtCore.Qt.SolidLine)}
 
 MAX_T_STYLE = {'pen': pg.mkPen(color=(85, 255, 0), width=2, style=QtCore.Qt.DashLine)}

@@ -15,6 +15,9 @@ NUM_CORES = 1
 # ----------------------------------------------------------------------
 
 MAX_NUM_COMPONENTS = 10
+METHOD_SPECTRA_FIT = 'leastsq'
+OPTIONS = 'xtol=1e-2, ftol=1e-3'
+MONITOR_SPECTRA_FIT = False
 
 # ----------------------------------------------------------------------
 # DEFAULT INTENSITY FIT SETTINGS

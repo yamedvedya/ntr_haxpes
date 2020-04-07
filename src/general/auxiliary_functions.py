@@ -8,3 +8,11 @@ def refresh_combo_box(comboBox, text):
     else:
         comboBox.setCurrentIndex(0)
         return False
+
+
+# ----------------------------------------------------------------------
+def colorizeWidget(widget, styleSheet, toolTip):
+    """
+    """
+    widget.setStyleSheet(styleSheet)
+    widget.setToolTip(toolTip)

@@ -6,6 +6,10 @@ from src.widgets.doublet_line_ui import Ui_doublet
 from src.spectra_fit.spectra_models import bck_models
 from src.general.auxiliary_functions import *
 
+from look_and_feel import WARNING_STYLE, WIDGET_TOLERANCE
+
+import numpy as np
+
 # ----------------------------------------------------------------------
 class Background(QtWidgets.QWidget):
 
@@ -33,6 +37,8 @@ class Background(QtWidgets.QWidget):
 
         self._connect_actions()
 
+        self.STD_STYLE = self._ui.dsp_value.styleSheet()
+
     # ----------------------------------------------------------------------
     def _fill_combo(self):
         for model in bck_models:
@@ -46,10 +52,10 @@ class Background(QtWidgets.QWidget):
         self._ui.chk_special_value.stateChanged.connect(lambda value: self._special_value(value))
         self._ui.chk_fit.stateChanged.connect(lambda value: self._make_fitable(value))
 
-        self._ui.dsp_value.editingFinished.connect(lambda: self.widget_edited.emit())
+        self._ui.dsp_value.editingFinished.connect(self._check_value)
 
-        self._ui.dsb_max.editingFinished.connect(lambda: self._check_limits)
-        self._ui.dsb_min.editingFinished.connect(lambda: self._check_limits)
+        self._ui.dsb_max.editingFinished.connect(self._check_limits)
+        self._ui.dsb_min.editingFinished.connect(self._check_limits)
 
     # ----------------------------------------------------------------------
     def _new_type(self):
@@ -71,8 +77,30 @@ class Background(QtWidgets.QWidget):
         self._block_signals(False)
 
     # ----------------------------------------------------------------------
+    def _check_value(self):
+        v_min = self._ui.dsb_min.value()
+        v_max = self._ui.dsb_max.value()
+        value = self._ui.dsp_value.value()
+
+        if np.isclose(value, v_min, rtol=WIDGET_TOLERANCE):
+            style, msg = WARNING_STYLE, "Value at min"
+        elif np.isclose(value, v_max, rtol=WIDGET_TOLERANCE):
+            style, msg = WARNING_STYLE, "Value at max"
+        else:
+            style, msg = self.STD_STYLE, ""
+
+        colorizeWidget(self._ui.dsp_value, style, "")
+
+        self.widget_edited.emit()
+
+    # ----------------------------------------------------------------------
     def _check_limits(self):
-        self._ui.dsp_value.setValue(min(max(self._ui.dsp_value.value(), self._ui.dsb_min.value()), self._ui.dsb_max.value()))
+        v_min = self._ui.dsb_min.value()
+        v_max = self._ui.dsb_max.value()
+        value = self._ui.dsp_value.value()
+
+        self._ui.dsp_value.setValue(min(max(value, v_min), v_max))
+        self._check_value()
 
     # ----------------------------------------------------------------------
     def _special_value(self, state):
@@ -117,7 +145,6 @@ class Background(QtWidgets.QWidget):
     # ----------------------------------------------------------------------
     def set_values(self, type, values):
 
-        self._new_type()
         self._block_signals(True)
         refresh_combo_box(self._ui.cb_back_type, type)
 
@@ -132,6 +159,13 @@ class Background(QtWidgets.QWidget):
             elif values['value'] == 'last':
                 refresh_combo_box(self._ui.cb_back_type, 'Intensity(maxBE)')
         else:
+            style, msg = self.STD_STYLE, ""
+            if values['fitable']:
+                if np.isclose(values['value'], values['min'], rtol=WIDGET_TOLERANCE):
+                    style, msg = WARNING_STYLE, "Value at min"
+                elif np.isclose(values['value'], values['max'], rtol=WIDGET_TOLERANCE):
+                    style, msg = WARNING_STYLE, "Value at max"
+            colorizeWidget(self._ui.dsp_value, style, msg)
             special_value = False
             self._ui.dsp_value.setValue(values['value'])
         self._ui.chk_special_value.setChecked(special_value)
@@ -143,6 +177,7 @@ class Background(QtWidgets.QWidget):
         self._ui.dsb_min.setEnabled(values['fitable'])
         self._ui.dsb_max.setValue(values['max'])
         self._ui.dsb_max.setEnabled(values['fitable'])
+
         self._block_signals(False)
 
 # ----------------------------------------------------------------------
@@ -160,6 +195,12 @@ class Line_Widget(QtWidgets.QWidget):
 
         self._id = id
         self._parent = parent
+
+    # ----------------------------------------------------------------------
+    def _finish_init(self):
+
+        self._connect_actions()
+        self.STD_STYLE = getattr(self._ui, 'dsp_{}'.format(self._param_list[0][1])).styleSheet()
 
     # ----------------------------------------------------------------------
     def _block_signals(self, state):
@@ -199,7 +240,7 @@ class Line_Widget(QtWidgets.QWidget):
                                                  self.name_changed.emit(self._id, x))
         self._ui.chk_functional_peak.stateChanged.connect(lambda: self.set_functional_signal.emit(self._id))
         for _, ui, _ in self._param_list:
-            getattr(self._ui, 'dsp_{}'.format(ui)).editingFinished.connect(lambda: self.widget_edited.emit())
+            getattr(self._ui, 'dsp_{}'.format(ui)).editingFinished.connect(lambda x=ui: self._check_value(x))
 
             getattr(self._ui, 'chk_{}_dep'.format(ui)).stateChanged.connect(lambda value, x=ui:
                                                                             self._toggle_dependence(value, x))
@@ -211,37 +252,65 @@ class Line_Widget(QtWidgets.QWidget):
             getattr(self._ui, 'dsb_{}_min'.format(ui)).editingFinished.connect(lambda x=ui: self._check_limits(x))
             getattr(self._ui, 'dsb_{}_max'.format(ui)).editingFinished.connect(lambda x=ui: self._check_limits(x))
             getattr(self._ui, 'bg_{}'.format(ui)).buttonClicked.connect(lambda type, x=ui: self._recalculate_limits(type, x))
+
     # ----------------------------------------------------------------------
     def _toggle_dependence(self, state, uis):
+
         getattr(self._ui, 'cmb_{}_dep'.format(uis)).setEnabled(state)
         self.widget_edited.emit()
 
     # ----------------------------------------------------------------------
     def _toggle_fittable(self, state, uis):
+
         getattr(self._ui, 'rb_{}_abolut'.format(uis)).setEnabled(state)
         getattr(self._ui, 'rb_{}_relative'.format(uis)).setEnabled(state)
         getattr(self._ui, 'dsb_{}_min'.format(uis)).setEnabled(state)
         getattr(self._ui, 'dsb_{}_max'.format(uis)).setEnabled(state)
 
     # ----------------------------------------------------------------------
-    def _check_limits(self, ui):
-        if getattr(self._ui, 'rb_{}_abolut'.format(ui)).isChecked():
-            getattr(self._ui, 'dsp_{}'.format(ui)).setValue(min(max(getattr(self._ui, 'dsp_{}'.format(ui)).value(),
-                                                                    getattr(self._ui, 'dsb_{}_min'.format(ui)).value()),
-                                                                getattr(self._ui, 'dsb_{}_max'.format(ui)).value()))
+    def _check_value(self, ui):
+        v_min = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
+        v_max = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+        value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
+
+        if np.isclose(value, v_min, rtol=WIDGET_TOLERANCE):
+            style, msg = WARNING_STYLE, "Value at min"
+        elif np.isclose(value, v_max, rtol=WIDGET_TOLERANCE):
+            style, msg = WARNING_STYLE, "Value at max"
+        else:
+            style, msg = self.STD_STYLE, ""
+
+        colorizeWidget(getattr(self._ui, 'dsp_{}'.format(ui)), style, "")
+
         self.widget_edited.emit()
+
+    # ----------------------------------------------------------------------
+    def _check_limits(self, ui):
+
+        v_min = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
+        v_max = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+        value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
+
+        if getattr(self._ui, 'rb_{}_abolut'.format(ui)).isChecked():
+            getattr(self._ui, 'dsp_{}'.format(ui)).setValue(min(max(value, v_min), v_max))
+
+        self._check_value(ui)
+
     # ----------------------------------------------------------------------
     def _recalculate_limits(self, type, ui):
+
         current_max = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
         current_min = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
         current_value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
 
-        if type == 'rb_{}_relative'.format(ui):
+        self._block_signals(True)
+        if type.objectName() == 'rb_{}_relative'.format(ui):
             getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max/current_value)
-            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_min/current_value)
+            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min/current_value)
         else:
             getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max*current_value)
-            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_min/current_value)
+            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min/current_value)
+        self._block_signals(False)
 
     # ----------------------------------------------------------------------
     def _recalculate_value(self, mode, ui):
@@ -254,17 +323,27 @@ class Line_Widget(QtWidgets.QWidget):
         #                  'limModel': 'absolute', 'min': 10, 'max': 40000},
 
         params = {}
+        list_of_relative_params = {}
+
         for name, ui, dependence_type in self._param_list:
-            params[name] = {'value': getattr(self._ui, 'dsp_{}'.format(ui)).value()}
+            value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
+            params[name] = {'value': value}
 
             if getattr(self._ui, 'chk_{}_fit'.format(ui)).isChecked():
                 params[name]['fitable'] = True
+                min_v = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
+                max_v = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+
                 if getattr(self._ui, 'rb_{}_relative'.format(ui)).isChecked():
                     params[name]['limModel'] = 'relative'
+                    list_of_relative_params[name] = (value - min_v, value + max_v)
                 else:
                     params[name]['limModel'] = 'absolute'
-                params[name]['min'] = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
-                params[name]['max'] = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+
+                params[name]['min'] = min_v
+                params[name]['max'] = max_v
+
+
             else:
                 params[name]['fitable'] = False
 
@@ -276,7 +355,7 @@ class Line_Widget(QtWidgets.QWidget):
                 params[name]['model'] = 'Flex'
 
         return {'name': str(self._ui.le_name.text()), 'peakType': self._type,
-                'params': params}
+                'params': params}, list_of_relative_params
 
     # ----------------------------------------------------------------------
     def get_widget_type(self):
@@ -285,27 +364,44 @@ class Line_Widget(QtWidgets.QWidget):
 
     # ----------------------------------------------------------------------
     def set_values(self, name, values):
-        self._reset_widget()
         self._block_signals(True)
         self._ui.le_name.setText(name)
         for key, item in values.items():
             for name, ui, _ in self._param_list:
                 if name == key:
                     getattr(self._ui, 'dsp_{}'.format(ui)).setValue(item['value'])
+                    style, msg = self.STD_STYLE, ""
 
                     if item['fitable']:
                         getattr(self._ui, 'chk_{}_fit'.format(ui)).setChecked(True)
                         self._toggle_fittable(True, ui)
                         if item['limModel'] == 'relative':
                             getattr(self._ui, 'rb_{}_relative'.format(ui)).setChecked(True)
+                            if np.isclose(1, item['min'], rtol=WIDGET_TOLERANCE):
+                                style, msg = WARNING_STYLE, "Value at min"
+                            elif np.isclose(1, item['max'], rtol=WIDGET_TOLERANCE):
+                                style, msg = WARNING_STYLE, "Value at max"
                         else:
                             getattr(self._ui, 'rb_{}_abolut'.format(ui)).setChecked(True)
+                            if np.isclose(item['value'], item['min'], rtol=WIDGET_TOLERANCE):
+                                style, msg = WARNING_STYLE, "Value at min"
+                            elif np.isclose(item['value'], item['max'], rtol=WIDGET_TOLERANCE):
+                                style, msg = WARNING_STYLE, "Value at max"
                         getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(item['min'])
                         getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(item['max'])
 
+                    else:
+                        self._toggle_fittable(False, ui)
+
                     if item['model'] == 'Dependent':
+                        getattr(self._ui, 'chk_{}_dep'.format(ui)).setChecked(True)
                         getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(True)
                         refresh_combo_box(getattr(self._ui, 'cmb_{}_dep'.format(ui)), item['baseValue'])
+                    else:
+                        getattr(self._ui, 'chk_{}_dep'.format(ui)).setChecked(False)
+                        getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(False)
+
+                    colorizeWidget(getattr(self._ui, 'dsp_{}'.format(ui)), style, "")
 
         self._block_signals(False)
 
@@ -339,7 +435,7 @@ class Single_line(Line_Widget):
         self._ui = Ui_single_line()
         self._ui.setupUi(self)
 
-        self._connect_actions()
+        self._finish_init()
 
 # ----------------------------------------------------------------------
 class Doublet(Line_Widget):
@@ -361,4 +457,4 @@ class Doublet(Line_Widget):
         self._ui = Ui_doublet()
         self._ui.setupUi(self)
 
-        self._connect_actions()
+        self._finish_init()

@@ -1,13 +1,15 @@
 import numpy as np
 import copy
 import h5py
-from lmfit import Parameters, report_fit, minimize
+from lmfit import Parameters, Minimizer
 import pickle
 from src.spectra_fit.spectra_models import models
 
 class Spectra_fitter():
     
     def __init__(self):
+        self.settings = {}
+
         self.data = []
         self.ndata  = 0
         self.current_fit_num = 0
@@ -28,6 +30,12 @@ class Spectra_fitter():
         self._fit_params = None
         self.baseValues = {}
         self.functional_peak = ''
+
+    # ----------------------------------------------------------------------
+    def set_basic_settings(self, settings):
+
+        for key, value in settings.items():
+            self.settings[key] = value
 
     # ----------------------------------------------------------------------
     def load_data(self, file_list):
@@ -71,9 +79,6 @@ class Spectra_fitter():
 
         self.spectra_experiment_plot.setData(self.data[spectra_ind]['energy'], self.data[spectra_ind]['intensity'])
         
-        #plots the component i onto ax using params
-
-
         if self.bg_params[spectra_ind] or self.peaks_info[spectra_ind]:
             sum_line, bg = self.sim_spectra(spectra_ind, [])
 
@@ -81,11 +86,15 @@ class Spectra_fitter():
             self.spectra_sum_plot.setData(self.data[spectra_ind]['energy'], sum_line)
 
             counter = 0
+            for plot in self.spectra_plots:
+                plot.hide()
+
             for peak in self.peaks_info[spectra_ind]:
                 line = bg + self.models.getModel(peak['peakType'], self.data[spectra_ind]['energy'],
                                                  self.data[spectra_ind]['intensity'], peak['params'])
 
                 self.spectra_plots[counter].setData(self.data[spectra_ind]['energy'], line)
+                self.spectra_plots[counter].show()
                 counter += 1
     
     # ----------------------------------------------------------------------
@@ -210,7 +219,7 @@ class Spectra_fitter():
         spectra, _ = self.sim_spectra(self.current_fit_num, fit_params)
         self.resid.append(self.data[self.current_fit_num]['intensity'][ind_start:ind_end] - spectra[ind_start:ind_end])
 
-        return [item for innerlist in self.resid for item in innerlist]
+        return np.square([item for innerlist in self.resid for item in innerlist])
 
     # ----------------------------------------------------------------------
     def get_start_value_back(self, index, type):
@@ -305,6 +314,16 @@ class Spectra_fitter():
     def fit(self, indexes):
         # calls minimize from lmfit using the objective function and the parameters
 
+        fit_options = {}
+        for option in self.settings['OPTIONS'].split(','):
+            if option != '':
+                key, value = option.split('=')
+                try:
+                    value = float(value)
+                except:
+                    pass
+                fit_options[key.strip()] = value
+
         for index in indexes:
             self.make_params(index)
             self.current_fit_num = index
@@ -313,8 +332,18 @@ class Spectra_fitter():
             else:
                 self.data[index]['lim_index'] = [np.where(self.data[index]['energy'] < self.data[index]['limits'][1])[0][0],
                                                  np.where(self.data[index]['energy'] > self.data[index]['limits'][0])[0][-1]]
-            result = minimize(self.err_func, self.fit_params)
-            self._update_peak_params(index, result.params)
+            solver = Minimizer(self.err_func, self.fit_params, iter_cb=self._display_fit_step)
+            solver.minimize(method=self.settings['METHOD_SPECTRA_FIT'], **fit_options)
+            self._update_peak_params(index, solver.result.params)
+
+    # ----------------------------------------------------------------------
+    def _display_fit_step(self, params, iter, resid, *fcn_args, **fcn_kws):
+
+        if self.settings['MONITOR_SPECTRA_FIT']:
+            msg = 'Iter: {:2d}, rss: {:.2f} '.format(iter, np.sum(np.square(resid)))
+            for key, param in params.items():
+                msg += 'param {}, value {:.3e} '.format(key, param.value)
+            print(msg)
 
     # ----------------------------------------------------------------------
     def _update_peak_params(self, index_to_refresh, params):
@@ -345,7 +374,8 @@ class Spectra_fitter():
     # ----------------------------------------------------------------------
     def dump_session(self, f):
 
-        pickle.dump({'data': self.data, 'ndata': self.ndata,
+        pickle.dump({'settings': self.settings,
+                     'data': self.data, 'ndata': self.ndata,
                      'bg_params': self.bg_params, 'peaks_info': self.peaks_info,
                      'functional_peak': self.functional_peak},
                     f, pickle.HIGHEST_PROTOCOL)
@@ -357,3 +387,20 @@ class Spectra_fitter():
             setattr(self, key, loaded_data[key])
 
         pass
+
+    # ----------------------------------------------------------------------
+    def dump_model(self, file_name, index):
+
+        with open(file_name, 'wb') as f:
+            pickle.dump({'bg_params': self.bg_params[index], 'peaks_info': self.peaks_info[index],
+                        'functional_peak': self.functional_peak},
+                        f, pickle.HIGHEST_PROTOCOL)
+
+    # ----------------------------------------------------------------------
+    def load_model(self, file_name, index):
+
+        with open(file_name, 'rb') as fr:
+            loaded_data = pickle.load(fr)
+            self.bg_params[index] = loaded_data['bg_params']
+            self.peaks_info[index] = loaded_data['peaks_info']
+            self.functional_peak = loaded_data['functional_peak']

@@ -3,6 +3,7 @@ import random
 import os
 import pyqtgraph as pg
 from scipy.io import loadmat
+import math
 
 from src.general.propagating_thread import ExcThread
 from src.widgets.main_window_ui import Ui_MainWindow
@@ -35,6 +36,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     _spectra_worker_state = 'idle'
     _intensity_worker_state = 'idle'
     _potential_worker_state = 'idle'
+    _list_of_relative_params = []
 
     # ----------------------------------------------------------------------
     def __init__(self, options):
@@ -63,6 +65,7 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.ntr_fitter.STAND_ALONE_MODE = False
 
         self.spectra_fitter = Spectra_fitter()
+        self.ntr_fitter.set_basic_settings(self.settings)
 
         self.settings_window.fill_combos(self.ntr_fitter.METHODS)
 
@@ -75,6 +78,8 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self._order_layers(0, '')
 
+        self._initStatusBar()
+
         self._refresh_status_timer = QtCore.QTimer(self)
         self._refresh_status_timer.timeout.connect(self._refresh_status)
         self._refresh_status_timer.start(500)
@@ -85,8 +90,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     def _block_signals(self, flag):
 
-        self._ui.but_settings_potential.blockSignals(flag)
-        self._ui.but_settings_intensity.blockSignals(flag)
+        self._ui.but_settings.blockSignals(flag)
 
         self._ui.cb_experimental_set.blockSignals(flag)
         self._ui.b_select_file.blockSignals(flag)
@@ -111,8 +115,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _connect_actions(self):
 
-        self._ui.but_settings_potential.clicked.connect(lambda: self._show_settings('potential'))
-        self._ui.but_settings_intensity.clicked.connect(lambda: self._show_settings('intensity'))
+        self._ui.but_settings.clicked.connect(self._show_settings)
 
         self._ui.s_cmd_add_back.clicked.connect(lambda: self._add_component('bkg'))
         self._ui.s_cmd_add_line.clicked.connect(lambda: self._add_component('line'))
@@ -123,6 +126,8 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._ui.s_bg_fit_spectra.buttonClicked.connect(lambda selection: self._range_fitting(selection))
         self._ui.s_sp_fit_from.valueChanged.connect(lambda value, x='from': self._check_range(x, value))
         self._ui.s_sp_fit_to.valueChanged.connect(lambda value, x='from': self._check_range(x, value))
+        self._ui.s_but_load_model.clicked.connect(self._load_model)
+        self._ui.s_but_save_model.clicked.connect(self._save_model)
 
         self._ui.s_dsp_cut_from.valueChanged.connect(lambda value, x='from': self._check_cut(x, value))
         self._ui.s_dsp_cut_to.valueChanged.connect(lambda value, x='to': self._check_cut(x, value))
@@ -178,7 +183,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     def _show_settings(self, mode):
 
         self.settings_window.set_options(self.settings)
-        self.settings_window.show(mode)
+        self.settings_window.show(self._ui.tab_mode.currentIndex())
 
     # ----------------------------------------------------------------------
     def _settings_changed(self, settings, mode_changed):
@@ -187,6 +192,7 @@ class NTR_Window(QtWidgets.QMainWindow):
             self.settings[key] = value
 
         self.ntr_fitter.set_basic_settings(self.settings)
+        self.spectra_fitter.set_basic_settings(self.settings)
         if 'intensity' in mode_changed:
             self.ntr_fitter.sw_synchronized = False
         elif 'potential' in mode_changed:
@@ -371,10 +377,52 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.spectra_fitter.set_default_plots(self.spectra_experiment_plot, self.spectra_sum_plot,
                                               self.spectra_bcg_plot, self.spectra_plots)
 
+
+    # ----------------------------------------------------------------------
+    def _mouseMoved(self, pos, plot_item):
+        item = getattr(self, plot_item)
+        if item.sceneBoundingRect().contains(pos):
+            pos = item.vb.mapSceneToView(pos)
+
+            x, y = pos.x(), pos.y()
+            txt = "x=" + ("{:.4e}".format(x) if math.fabs(x) < 1e-4 else "{:.4f}".format(x))
+            txt += ", y=" + ("{:.4e}".format(y) if math.fabs(y) < 1e-4 else "{:.4f}".format(y))
+            self._lb_cursor.setText(txt)
+
+    # ----------------------------------------------------------------------
+    def _initStatusBar(self):
+        """
+        """
+        self._lb_cursor = QtWidgets.QLabel("")
+        self.statusBar().addPermanentWidget(self._lb_cursor)
+
 # ----------------------------------------------------------------------
 #       Spectra fit code
 # ----------------------------------------------------------------------
 
+    # ----------------------------------------------------------------------
+    def _save_model(self):
+        new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Create file", self._working_dir, '.mdl')
+        if new_file[0]:
+            if '.mdl' in new_file[0]:
+                file_name = new_file[0]
+            else:
+                file_name = "".join(new_file)
+
+            self.spectra_fitter.dump_model(file_name, self._ui.s_scr_spectra.value())
+
+
+    # ----------------------------------------------------------------------
+    def _load_model(self):
+
+        new_file = QtWidgets.QFileDialog.getOpenFileName(self, "Open file", self._working_dir, 'Spectra model (*.mdl)')
+
+        if new_file[0]:
+            self.spectra_fitter.load_model(new_file[0], self._ui.s_scr_spectra.value())
+            self._reset_functional_peak()
+            self._show_spectra(self._ui.s_scr_spectra.value())
+
+    # ----------------------------------------------------------------------
     def _set_data_to_fitter(self):
         functional_peak_name = None
         for _, widget in self._components_widgets:
@@ -493,8 +541,9 @@ class NTR_Window(QtWidgets.QMainWindow):
                 self._components_widgets.append((widget_id, widget))
             need_update = True
         elif num_peak_components < num_peak_widgets:
-            self._layers_widgets[num_peak_components - num_peak_widgets:] = []
+            self._components_widgets[num_peak_components - num_peak_widgets:] = []
             need_update = True
+
 
         for index, info in enumerate(self.spectra_fitter.peaks_info[index]):
             id, type = self._components_widgets[index][1].get_widget_type()
@@ -550,6 +599,8 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.range_line_to.sigPositionChanged.connect(lambda: self._ui.s_dsp_cut_to.setValue(self.range_line_to.value()))
 
         self.spectra_plot = self.spectra_graphs_layout.addPlot()
+        self.spectra_plot.scene().sigMouseMoved.connect(
+            lambda pos, source='spectra_plot': self._mouseMoved(pos, source))
         self.spectra_plot.getViewBox().invertX(True)
         self.spectra_plot.addItem(self.range_line_from, ignoreBounds=True)
         self.spectra_plot.addItem(self.range_line_to, ignoreBounds=True)
@@ -569,7 +620,9 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _show_spectra(self, numer):
+
         self._ui.s_lb_spectra_num.setText('Spectra {} from {}'.format(numer, self.spectra_fitter.ndata-1))
+        self._ui.s_lb_angle.setText('Angle {:.2f}'.format(float(self.spectra_fitter.data[numer]['angle'])))
         self.spectra_fitter.plot_spectra(numer)
         if self.spectra_fitter.data[numer]['range'] == 'auto':
             self._ui.s_rb_range_all.setChecked(True)
@@ -630,6 +683,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self._update_layout(self._ui.s_wc_models, widget_list)
 
+
     # ----------------------------------------------------------------------
     def _delete_component(self, idx):
         for ind, data in enumerate(self._backgrounds_widgets):
@@ -651,15 +705,18 @@ class NTR_Window(QtWidgets.QMainWindow):
             bg_params[type] = params
 
         peaks_info = []
+        list_of_relative_params = []
         for record in self._components_widgets:
-            peaks_info.append(record[1].get_values())
+            peak_data, relative_params = record[1].get_values()
+            peaks_info.append(peak_data)
+            list_of_relative_params.append(relative_params)
 
-        return bg_params, peaks_info
+        return bg_params, peaks_info, list_of_relative_params
 
     # ----------------------------------------------------------------------
     def _sim_spectra(self):
         index = self._ui.s_scr_spectra.value()
-        bg_params, peaks_info = self._collect_components_model()
+        bg_params, peaks_info, _ = self._collect_components_model()
         self.spectra_fitter.set_peak_params([index], bg_params, peaks_info)
         self.spectra_fitter.plot_spectra(index)
 
@@ -683,15 +740,24 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _spectra_fit_worker(self, indexes):
         self._spectra_worker_state = 'working'
-        bg_params, peaks_info = self._collect_components_model()
+        bg_params, peaks_info, self._list_of_relative_params = self._collect_components_model()
         self.spectra_fitter.set_peak_params(indexes, bg_params, peaks_info)
         try:
             self.spectra_fitter.fit(indexes)
         except Exception as err:
             self.error_queue.put(err)
+        self._update_relative_limits(self._ui.s_scr_spectra.value())
         self._show_params(self._ui.s_scr_spectra.value())
         self.spectra_fitter.plot_spectra(self._ui.s_scr_spectra.value())
         self._spectra_worker_state = 'idle'
+
+    # ----------------------------------------------------------------------
+    def _update_relative_limits(self, index):
+        for index, info in enumerate(self.spectra_fitter.peaks_info[index]):
+            for key in self._list_of_relative_params[index].keys():
+                new_value = info['params'][key]['value']
+                info['params'][key]['min'] = new_value - self._list_of_relative_params[index][key][0]
+                info['params'][key]['max'] = self._list_of_relative_params[index][key][1] - new_value
 
 # ----------------------------------------------------------------------
 #       Intensity fit code
@@ -730,6 +796,8 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.sim_int_widget.setCentralItem(self.sim_int_graphs_layout)
 
         self.g_int_item = self.sim_int_graphs_layout.addPlot()
+        self.g_int_item.scene().sigMouseMoved.connect(
+            lambda pos, source='g_int_item': self._mouseMoved(pos, source))
         self.g_i_source_plot = self.g_int_item.plot([], name='Data shifts', **lookandfeel.CURRENT_SOURCE_SHIFT)
         self.g_i_sim_plot = self.g_int_item.plot([], name='Sim shifts', **lookandfeel.CURRENT_SIM_SHIFT)
 
@@ -954,10 +1022,14 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.sim_pot_widget.setCentralItem(self.sim_pot_graphs_layout)
 
         self.g_ps_pot_item = self.sim_pot_graphs_layout.addPlot(title="Potential", row=1, col=1)
+        self.g_ps_pot_item.scene().sigMouseMoved.connect(
+            lambda pos, source='g_ps_pot_item': self._mouseMoved(pos, source))
         self.g_ps_pot_item.setYRange(-self.settings['VOLT_MAX'], self.settings['VOLT_MAX'])
         self.g_ps_pot_plot = self.g_ps_pot_item.plot([], name='Potential', **lookandfeel.CURRENT_POTENTIAL_STYLE)
 
         self.g_ps_shift_item = self.sim_pot_graphs_layout.addPlot(title="Shifts", row=2, col=1)
+        self.g_ps_shift_item.scene().sigMouseMoved.connect(
+            lambda pos, source='g_ps_shift_item': self._mouseMoved(pos, source))
         self.g_ps_shift_source_plot = self.g_ps_shift_item.plot([], name='Data shifts', **lookandfeel.CURRENT_SOURCE_SHIFT)
         self.g_ps_shift_sim_plot = self.g_ps_shift_item.plot([], name='Sim shifts', **lookandfeel.CURRENT_SIM_SHIFT)
 

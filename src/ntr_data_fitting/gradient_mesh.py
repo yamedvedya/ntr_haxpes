@@ -593,7 +593,8 @@ class Gradient_Mesh_Solver():
                 self.potential_graph.setData((self.parent.data_set_for_fitting['fit_depth_points']
                                               - self.parent.data_set_for_fitting['fit_depth_points'][0])*1e9,
                                              self.potential_graphs_history[ind])
-                self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0], self.shifts_graphs_history[ind])
+                self.shifts_graph.setData(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
+                                          self.parent.be_shift + self.shifts_graphs_history[ind])
 
                 for point in range(self.parent.potential_model['num_depth_dof'] +
                                                                     self.parent.potential_model['only_voltage_dof']):

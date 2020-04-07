@@ -4,8 +4,7 @@ import default_settings as default_settings
 from multiprocessing import cpu_count
 from src.ntr_data_fitting.subfunctions import get_precision
 from src.general.auxiliary_functions import *
-import os
-import sys
+from src.ntr_data_fitting.compounds import COMPAUNDS
 import numpy as np
 
 # ----------------------------------------------------------------------
@@ -14,6 +13,10 @@ class Settings_Window(QtWidgets.QMainWindow):
     settings_changed = QtCore.pyqtSignal(dict, list)
 
     settings_objects = (
+        ('METHOD_SPECTRA_FIT', 'cb_spectra_fit_method', 'cb', 'spectra'),
+        ('OPTIONS', 'le_spectra_fit_parameters', 'le_txt', 'spectra'),
+        ('MONITOR_SPECTRA_FIT', 'chk_spectra_fit_monitor', 'chk', 'spectra'),
+
         ('G', 'sb_ref_gauss', 'sb_dbl', 'potential'),
         ('L', 'sb_ref_lorentz', 'sb_dbl', 'potential'),
         ('BE_STEP', 'sb_ref_be_step', 'sb_dbl', 'potential'),
@@ -103,7 +106,7 @@ class Settings_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def show(self, mode):
 
-        self._ui.stw_mode.setCurrentIndex(0 if mode == 'intensity' else 1)
+        self._ui.stw_mode.setCurrentIndex(mode)
         super(Settings_Window, self).show()
 
     # ----------------------------------------------------------------------
@@ -227,10 +230,8 @@ class Settings_Window(QtWidgets.QMainWindow):
             self._ui.cb_solver.addItem(str(method))
 
         self._available_methods = methods
-
-        f = open(os.path.join(os.path.dirname(sys.argv[0]), 'src/ntr_data_fitting/compounds.txt'))
-        for line in f:
-            self._ui.cb_subsrate_database.addItem(str(line).strip('\n').strip())
+        for compound in COMPAUNDS:
+            self._ui.cb_subsrate_database.addItem(compound)
 
     # ----------------------------------------------------------------------
     #   intensity fit
