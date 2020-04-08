@@ -129,7 +129,7 @@ class Gradient_Mesh_Solver():
 
         shifts_plot = graphs_layout.addPlot(title="Shifts", row=1, col=start_ind + 1)
         shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
-                         self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
+                         self.parent.be_shift + self.parent.data_set_for_fitting['spectroscopic_data'][:, 2],
                          **lookandfeel.CURRENT_SOURCE_SHIFT)
 
         self.shifts_graph = shifts_plot.plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
@@ -168,7 +168,7 @@ class Gradient_Mesh_Solver():
                                                                np.zeros(self.parent.settings['D_MESH']), '*-')[0]])
 
         self.axes[1, self.num_colums - 1].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
-                                                            self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], 'x')
+                                               self.parent.be_shift + self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], 'x')
         self.shifts_graph = [self.axes[1, self.num_colums - 1],
                              self.axes[1, self.num_colums - 1].plot(self.parent.data_set_for_fitting['spectroscopic_data'][:, 0],
                                                                     self.parent.data_set_for_fitting['spectroscopic_data'][:, 2], '-')[0]]
