@@ -65,7 +65,7 @@ class NTR_Window(QtWidgets.QMainWindow):
         self.ntr_fitter.STAND_ALONE_MODE = False
 
         self.spectra_fitter = Spectra_fitter()
-        self.ntr_fitter.set_basic_settings(self.settings)
+        self.spectra_fitter.set_basic_settings(self.settings)
 
         self.settings_window.fill_combos(self.ntr_fitter.METHODS)
 
@@ -118,8 +118,11 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._ui.but_settings.clicked.connect(self._show_settings)
 
         self._ui.s_cmd_add_back.clicked.connect(lambda: self._add_component('bkg'))
-        self._ui.s_cmd_add_line.clicked.connect(lambda: self._add_component('line'))
-        self._ui.s_cmd_add_doublet.clicked.connect(lambda: self._add_component('dbl'))
+        self._ui.s_cmd_add_s_voi.clicked.connect(lambda: self._add_component('s_voi'))
+        self._ui.s_cmd_add_d_voi.clicked.connect(lambda: self._add_component('d_voi'))
+        self._ui.s_cmd_add_s_don.clicked.connect(lambda: self._add_component('s_don'))
+        self._ui.s_cmd_add_d_don.clicked.connect(lambda: self._add_component('d_don'))
+
         self._ui.s_scr_spectra.valueChanged.connect(lambda value: self._show_spectra(value))
         self._ui.s_cmd_fit_one.clicked.connect(self._fit_current_spectra)
         self._ui.s_cmd_fit_all.clicked.connect(self._fit_all_spectra)
@@ -402,6 +405,7 @@ class NTR_Window(QtWidgets.QMainWindow):
 
     # ----------------------------------------------------------------------
     def _save_model(self):
+
         new_file = QtWidgets.QFileDialog.getSaveFileName(self, "Create file", self._working_dir, '.mdl')
         if new_file[0]:
             if '.mdl' in new_file[0]:
@@ -409,8 +413,8 @@ class NTR_Window(QtWidgets.QMainWindow):
             else:
                 file_name = "".join(new_file)
 
-            self.spectra_fitter.dump_model(file_name, self._ui.s_scr_spectra.value())
-
+            bg_params, peaks_info, self._list_of_relative_params, _ = self._collect_components_model()
+            self.spectra_fitter.dump_model(file_name, bg_params, peaks_info)
 
     # ----------------------------------------------------------------------
     def _load_model(self):
@@ -419,7 +423,6 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         if new_file[0]:
             self.spectra_fitter.load_model(new_file[0], self._ui.s_scr_spectra.value())
-            self._reset_functional_peak()
             self._show_spectra(self._ui.s_scr_spectra.value())
 
     # ----------------------------------------------------------------------
@@ -441,12 +444,13 @@ class NTR_Window(QtWidgets.QMainWindow):
         else:
             mode = 'manual'
 
-        to =self._ui.s_dsp_cut_to.value()
+        to = self._ui.s_dsp_cut_to.value()
         start = self._ui.s_dsp_cut_from.value()
 
         for data in self.spectra_fitter.data:
             data['range'] = mode
             data['limits'] = [to, start]
+
     # ----------------------------------------------------------------------
     def _cut_range(self, selection):
         spectra_num = self._ui.s_scr_spectra.value()
@@ -463,6 +467,7 @@ class NTR_Window(QtWidgets.QMainWindow):
         self._ui.s_dsp_cut_to.setEnabled(status)
         self.range_line_from.setMovable(status)
         self.range_line_to.setMovable(status)
+
     # ----------------------------------------------------------------------
     def _check_cut(self, type, value):
         spectra_num = self._ui.s_scr_spectra.value()
@@ -496,6 +501,14 @@ class NTR_Window(QtWidgets.QMainWindow):
             self._ui.s_sp_fit_from.setMaximum(num_spectra - 1)
             self._ui.s_scr_spectra.setEnabled(True)
             self._show_spectra(0)
+
+    # ----------------------------------------------------------------------
+    def get_base_value(self, peak, value):
+        for info in self.spectra_fitter.peaks_info[self._ui.s_scr_spectra.value()]:
+            if info['name'] == peak:
+                for key, item in info['params'].items():
+                    if key == value:
+                        return item['value']
 
     # ----------------------------------------------------------------------
     def _show_params(self, index):
@@ -532,9 +545,15 @@ class NTR_Window(QtWidgets.QMainWindow):
             for counter in range(num_peak_widgets, num_peak_components):
                 widget_id = random.random()
                 if self.spectra_fitter.peaks_info[index][counter]['peakType'] == 'voigth':
-                    widget = Single_line(self, widget_id)
+                    widget = Single_voigt(self, widget_id)
+                elif self.spectra_fitter.peaks_info[index][counter]['peakType'] == 'voigth_doublet':
+                    widget = Doublet_voigt(self, widget_id)
+                elif self.spectra_fitter.peaks_info[index][counter]['peakType'] == 'doniach_sunjic':
+                    widget = Single_donijak(self, widget_id)
+                elif self.spectra_fitter.peaks_info[index][counter]['peakType'] == 'doublet_doniach_sunjic':
+                    widget = Doublet_donijak(self, widget_id)
                 else:
-                    widget = Doublet(self, widget_id)
+                    raise RuntimeError('Wrong model')
                 widget.delete_component.connect(self._delete_component)
                 widget.widget_edited.connect(self._sim_spectra)
                 widget.set_functional_signal.connect(self._set_new_functional_peak)
@@ -544,20 +563,31 @@ class NTR_Window(QtWidgets.QMainWindow):
             self._components_widgets[num_peak_components - num_peak_widgets:] = []
             need_update = True
 
-
-        for index, info in enumerate(self.spectra_fitter.peaks_info[index]):
-            id, type = self._components_widgets[index][1].get_widget_type()
+        for info_index, info in enumerate(self.spectra_fitter.peaks_info[index]):
+            id, type = self._components_widgets[info_index][1].get_widget_type()
             if type != info['peakType']:
                 if info['peakType'] == 'voigth':
-                    widget = Single_line(self, id)
+                    widget = Single_voigt(self, id)
+                elif info['peakType'] == 'voigth_doublet':
+                    widget = Doublet_voigt(self, id)
+                elif info['peakType'] == 'doniach_sunjic':
+                    widget = Single_donijak(self, id)
+                elif info['peakType'] == 'doublet_doniach_sunjic':
+                    widget = Doublet_donijak(self, id)
                 else:
-                    widget = Doublet(self, id)
-                self._components_widgets[index] = (id, widget)
+                    raise RuntimeError('Wrong model')
+
+                self._components_widgets[info_index] = (id, widget)
                 need_update = True
-            self._components_widgets[index][1].set_values(info['name'], info['params'])
+            self._components_widgets[info_index][1].set_name(info['name'])
+
+        self._update_dependences()
 
         if need_update:
             self._show_components()
+
+        for info_index, info in enumerate(self.spectra_fitter.peaks_info[index]):
+            self._components_widgets[info_index][1].set_values(info['params'])
 
     # ----------------------------------------------------------------------
     def _range_fitting(self, selection):
@@ -646,19 +676,46 @@ class NTR_Window(QtWidgets.QMainWindow):
         if type == 'bkg':
             widget = Background(self, widget_id)
             self._backgrounds_widgets.append((widget_id, widget))
-        elif type == 'line':
-            widget = Single_line(self, widget_id)
+        elif type == 's_voi':
+            widget = Single_voigt(self, widget_id)
             self._components_widgets.append((widget_id, widget))
             widget.set_functional_signal.connect(self._set_new_functional_peak)
-        elif type == 'dbl':
-            widget = Doublet(self, widget_id)
+            widget.name_changed.connect(self._peak_name_changed)
+        elif type == 'd_voi':
+            widget = Doublet_voigt(self, widget_id)
             self._components_widgets.append((widget_id, widget))
             widget.set_functional_signal.connect(self._set_new_functional_peak)
+            widget.name_changed.connect(self._peak_name_changed)
+        elif type == 's_don':
+            widget = Single_donijak(self, widget_id)
+            self._components_widgets.append((widget_id, widget))
+            widget.set_functional_signal.connect(self._set_new_functional_peak)
+            widget.name_changed.connect(self._peak_name_changed)
+        elif type == 'd_don':
+            widget = Doublet_donijak(self, widget_id)
+            self._components_widgets.append((widget_id, widget))
+            widget.set_functional_signal.connect(self._set_new_functional_peak)
+            widget.name_changed.connect(self._peak_name_changed)
 
         widget.delete_component.connect(self._delete_component)
         widget.widget_edited.connect(self._sim_spectra)
 
         self._show_components()
+
+    # ----------------------------------------------------------------------
+    def _peak_name_changed(self, old_name, new_name):
+        _, peaks_info, _, dependences_info = self._collect_components_model()
+
+        for peak in peaks_info:
+            for _, param_data in peak['params'].items():
+                if param_data['model'] == 'Dependent':
+                    if old_name in param_data['baseValue']:
+                        param_data['baseValue'] = param_data['baseValue'].replace(old_name, new_name)
+        for _, widget in self._components_widgets:
+            widget.update_dependence_combos(dependences_info)
+
+        for index, info in enumerate(peaks_info):
+            self._components_widgets[index][1].set_values(info['params'])
 
     # ----------------------------------------------------------------------
     def _set_new_functional_peak(self, id_to_set):
@@ -681,8 +738,14 @@ class NTR_Window(QtWidgets.QMainWindow):
         for _, widget in self._backgrounds_widgets + self._components_widgets:
             widget_list.append(widget)
 
+        self._update_dependences()
         self._update_layout(self._ui.s_wc_models, widget_list)
 
+    # ----------------------------------------------------------------------
+    def _update_dependences(self):
+        _, _, _, dependences_info = self._collect_components_model()
+        for _, widget in self._components_widgets:
+            widget.update_dependence_combos(dependences_info)
 
     # ----------------------------------------------------------------------
     def _delete_component(self, idx):
@@ -690,12 +753,11 @@ class NTR_Window(QtWidgets.QMainWindow):
             if data[0] == idx:
                 del self._backgrounds_widgets[ind]
                 self._show_components()
-                return
         for ind, data in enumerate(self._components_widgets):
             if data[0] == idx:
                 del self._components_widgets[ind]
                 self._show_components()
-                return
+        self._sim_spectra()
 
     # ----------------------------------------------------------------------
     def _collect_components_model(self):
@@ -706,19 +768,24 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         peaks_info = []
         list_of_relative_params = []
+        dependences_info = []
         for record in self._components_widgets:
-            peak_data, relative_params = record[1].get_values()
+            peak_data, relative_params, dependences = record[1].get_values()
             peaks_info.append(peak_data)
             list_of_relative_params.append(relative_params)
+            dependences_info.append(dependences)
 
-        return bg_params, peaks_info, list_of_relative_params
+        return bg_params, peaks_info, list_of_relative_params, dependences_info
 
     # ----------------------------------------------------------------------
     def _sim_spectra(self):
-        index = self._ui.s_scr_spectra.value()
-        bg_params, peaks_info, _ = self._collect_components_model()
-        self.spectra_fitter.set_peak_params([index], bg_params, peaks_info)
-        self.spectra_fitter.plot_spectra(index)
+        try:
+            index = self._ui.s_scr_spectra.value()
+            bg_params, peaks_info, _, _ = self._collect_components_model()
+            self.spectra_fitter.set_peak_params([index], bg_params, peaks_info)
+            self.spectra_fitter.plot_spectra(index)
+        except Exception as err:
+            self.error_queue.put(err)
 
     # ----------------------------------------------------------------------
     def _fit_current_spectra(self):
@@ -740,7 +807,7 @@ class NTR_Window(QtWidgets.QMainWindow):
     # ----------------------------------------------------------------------
     def _spectra_fit_worker(self, indexes):
         self._spectra_worker_state = 'working'
-        bg_params, peaks_info, self._list_of_relative_params = self._collect_components_model()
+        bg_params, peaks_info, self._list_of_relative_params, _ = self._collect_components_model()
         self.spectra_fitter.set_peak_params(indexes, bg_params, peaks_info)
         try:
             self.spectra_fitter.fit(indexes)

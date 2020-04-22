@@ -238,7 +238,7 @@ class Intensity_Solver():
         while not solution_found and self.parent.fit_in_progress:
             directions = np.zeros(len(var_list))
             for ind, var in enumerate(self._var_list):
-                directions[ind] = -np.sign(diffs[ind])*(max(1, 1 // np.abs(diffs[ind])))
+                directions[ind] = -np.sign(diffs[ind])*(max(1, 0.1 // np.abs(diffs[ind])))
 
             self.parent.structure = copy.deepcopy(self._current_structure)
             directions = self._check_limits(directions)

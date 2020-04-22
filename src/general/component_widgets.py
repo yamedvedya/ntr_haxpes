@@ -2,6 +2,8 @@ from PyQt5 import QtWidgets, QtCore
 from src.widgets.background_ui import Ui_background
 from src.widgets.single_line_ui import Ui_single_line
 from src.widgets.doublet_line_ui import Ui_doublet
+from src.widgets.single_donijak_ui import Ui_single_donijak
+from src.widgets.doublet_donijak_ui import Ui_double_donijak
 
 from src.spectra_fit.spectra_models import bck_models
 from src.general.auxiliary_functions import *
@@ -185,7 +187,7 @@ class Line_Widget(QtWidgets.QWidget):
 
     widget_edited = QtCore.pyqtSignal()
     delete_component = QtCore.pyqtSignal(float)
-    name_changed = QtCore.pyqtSignal(float, str)
+    name_changed = QtCore.pyqtSignal(str, str)
     set_functional_signal = QtCore.pyqtSignal(float)
 
     # ----------------------------------------------------------------------
@@ -195,6 +197,10 @@ class Line_Widget(QtWidgets.QWidget):
 
         self._id = id
         self._parent = parent
+        self._name = ''
+        self._dependence_sources = {}
+        self._dependence_state = False
+        self._current_dependence_source = []
 
     # ----------------------------------------------------------------------
     def _finish_init(self):
@@ -208,7 +214,7 @@ class Line_Widget(QtWidgets.QWidget):
         self._ui.le_name.blockSignals(state)
         self._ui.chk_functional_peak.blockSignals(state)
 
-        for _, ui, _ in self._param_list:
+        for _, ui, _, _ in self._param_list:
             getattr(self._ui, 'dsp_{}'.format(ui)).blockSignals(state)
             getattr(self._ui, 'chk_{}_dep'.format(ui)).blockSignals(state)
             getattr(self._ui, 'cmb_{}_dep'.format(ui)).blockSignals(state)
@@ -221,7 +227,7 @@ class Line_Widget(QtWidgets.QWidget):
     # ----------------------------------------------------------------------
     def _reset_widget(self):
 
-        for _, ui, _ in self._param_list:
+        for _, ui, _, _ in self._param_list:
             getattr(self._ui, 'dsp_{}'.format(ui)).setValue(0)
             getattr(self._ui, 'chk_{}_dep'.format(ui)).setChecked(False)
             getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(False)
@@ -236,16 +242,15 @@ class Line_Widget(QtWidgets.QWidget):
     def _connect_actions(self):
 
         self._ui.pb_delete.clicked.connect(lambda: self.delete_component.emit(self._id))
-        self._ui.le_name.editingFinished.connect(lambda x=str(self._ui.le_name.text()):
-                                                 self.name_changed.emit(self._id, x))
+        self._ui.le_name.editingFinished.connect(self._change_name)
         self._ui.chk_functional_peak.stateChanged.connect(lambda: self.set_functional_signal.emit(self._id))
-        for _, ui, _ in self._param_list:
+        for _, ui, _, _ in self._param_list:
             getattr(self._ui, 'dsp_{}'.format(ui)).editingFinished.connect(lambda x=ui: self._check_value(x))
 
             getattr(self._ui, 'chk_{}_dep'.format(ui)).stateChanged.connect(lambda value, x=ui:
                                                                             self._toggle_dependence(value, x))
-            getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentIndexChanged.connect(lambda value, x=ui:
-                                                                                   self._recalculate_value(value, x))
+            getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentIndexChanged.connect(lambda _, x=ui:
+                                                                                   self._recalculate_value(x))
 
             getattr(self._ui, 'chk_{}_fit'.format(ui)).stateChanged.connect(lambda state, x=ui:
                                                                             self._toggle_fittable(bool(state), x))
@@ -254,10 +259,88 @@ class Line_Widget(QtWidgets.QWidget):
             getattr(self._ui, 'bg_{}'.format(ui)).buttonClicked.connect(lambda type, x=ui: self._recalculate_limits(type, x))
 
     # ----------------------------------------------------------------------
-    def _toggle_dependence(self, state, uis):
+    def _toggle_dependence(self, state, ui):
 
-        getattr(self._ui, 'cmb_{}_dep'.format(uis)).setEnabled(state)
+        self._block_signals(True)
+
+        getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(state)
+        base_peak = getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentText()
+        base_value = self._parent.get_base_value(base_peak, self._dependence_sources[ui][base_peak])
+
+        value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
+        absolut_lim = getattr(self._ui, 'rb_{}_abolut'.format(ui)).isChecked()
+        v_min = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
+        v_max = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+
+        if state:
+            self._dependence_state = True
+            self._current_dependence_source = base_peak
+            for _, uis, dependence_type, _ in self._param_list:
+                if ui == uis:
+                    if dependence_type == 'additive':
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value-base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min-base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max-base_value)
+                    else:
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value/base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min/base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max/base_value)
+        else:
+            self._dependence_state = False
+            self._current_dependence_source = []
+            for _, uis, dependence_type, _ in self._param_list:
+                if ui == uis:
+                    if dependence_type == 'additive':
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value+base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min+base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max+base_value)
+                    else:
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value*base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min*base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max*base_value)
+
+        self._block_signals(False)
+
         self.widget_edited.emit()
+
+    # ----------------------------------------------------------------------
+    def _recalculate_value(self, ui):
+
+        if self._dependence_state:
+            self._block_signals(True)
+            old_base_value = self._parent.get_base_value(self._current_dependence_source,
+                                                     self._dependence_sources[ui][self._current_dependence_source])
+
+            new_base_peak = getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentText()
+            new_base_value = self._parent.get_base_value(new_base_peak, self._dependence_sources[ui][new_base_peak])
+
+            value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
+            absolut_lim = getattr(self._ui, 'rb_{}_abolut'.format(ui)).isChecked()
+            v_min = getattr(self._ui, 'dsb_{}_min'.format(ui)).value()
+            v_max = getattr(self._ui, 'dsb_{}_max'.format(ui)).value()
+
+            for _, uis, dependence_type, _ in self._param_list:
+                if ui == uis:
+                    if dependence_type == 'additive':
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value + old_base_value - new_base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min + old_base_value - new_base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max + old_base_value - new_base_value)
+                    else:
+                        getattr(self._ui, 'dsp_{}'.format(ui)).setValue(value * old_base_value / new_base_value)
+                        if absolut_lim:
+                            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(v_min * old_base_value / new_base_value)
+                            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(v_max * old_base_value / new_base_value)
+
+            self._current_dependence_source = new_base_peak
+
+            self._block_signals(False)
+
+            self.widget_edited.emit()
 
     # ----------------------------------------------------------------------
     def _toggle_fittable(self, state, uis):
@@ -266,6 +349,13 @@ class Line_Widget(QtWidgets.QWidget):
         getattr(self._ui, 'rb_{}_relative'.format(uis)).setEnabled(state)
         getattr(self._ui, 'dsb_{}_min'.format(uis)).setEnabled(state)
         getattr(self._ui, 'dsb_{}_max'.format(uis)).setEnabled(state)
+
+    # ----------------------------------------------------------------------
+    def _change_name(self):
+        old_name = self._name
+        self._name = str(self._ui.le_name.text())
+        if self._name != old_name:
+            self.name_changed.emit(old_name, self._name)
 
     # ----------------------------------------------------------------------
     def _check_value(self, ui):
@@ -304,17 +394,16 @@ class Line_Widget(QtWidgets.QWidget):
         current_value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
 
         self._block_signals(True)
-        if type.objectName() == 'rb_{}_relative'.format(ui):
-            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max/current_value)
-            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min/current_value)
-        else:
-            getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max*current_value)
-            getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min/current_value)
+        try:
+            if type.objectName() == 'rb_{}_relative'.format(ui):
+                getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max/current_value)
+                getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min/current_value)
+            else:
+                getattr(self._ui, 'dsb_{}_max'.format(ui)).setValue(current_max*current_value)
+                getattr(self._ui, 'dsb_{}_min'.format(ui)).setValue(current_min*current_value)
+        except:
+            pass
         self._block_signals(False)
-
-    # ----------------------------------------------------------------------
-    def _recalculate_value(self, mode, ui):
-        pass
 
     # ----------------------------------------------------------------------
     def get_values(self):
@@ -324,10 +413,12 @@ class Line_Widget(QtWidgets.QWidget):
 
         params = {}
         list_of_relative_params = {}
+        dependences_info = {self._name:[]}
 
-        for name, ui, dependence_type in self._param_list:
+        for name, ui, dependence_type, _ in self._param_list:
             value = getattr(self._ui, 'dsp_{}'.format(ui)).value()
             params[name] = {'value': value}
+            dependences_info[self._name].append(name)
 
             if getattr(self._ui, 'chk_{}_fit'.format(ui)).isChecked():
                 params[name]['fitable'] = True
@@ -343,19 +434,19 @@ class Line_Widget(QtWidgets.QWidget):
                 params[name]['min'] = min_v
                 params[name]['max'] = max_v
 
-
             else:
                 params[name]['fitable'] = False
 
             if getattr(self._ui, 'chk_{}_dep'.format(ui)).isChecked():
                 params[name]['model'] = 'Dependent'
-                params[name]['baseValue'] = getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentText()
+                base_peak = getattr(self._ui, 'cmb_{}_dep'.format(ui)).currentText()
+                params[name]['baseValue'] = '/'.join([base_peak, self._dependence_sources[ui][base_peak]])
                 params[name]['linkType'] = dependence_type
             else:
                 params[name]['model'] = 'Flex'
 
-        return {'name': str(self._ui.le_name.text()), 'peakType': self._type,
-                'params': params}, list_of_relative_params
+        return {'name': self._name, 'peakType': self._type,
+                'params': params}, list_of_relative_params, dependences_info
 
     # ----------------------------------------------------------------------
     def get_widget_type(self):
@@ -363,11 +454,35 @@ class Line_Widget(QtWidgets.QWidget):
         return self._id, self._type
 
     # ----------------------------------------------------------------------
-    def set_values(self, name, values):
+    def update_dependence_combos(self, dependences_info):
+
+        self._block_signals(True)
+        self._dependence_sources = {}
+        for _, ui, _, target_parameters in self._param_list:
+            getattr(self._ui, 'cmb_{}_dep'.format(ui)).clear()
+            self._dependence_sources[ui] = {}
+            for info_set in dependences_info:
+                for peak_name, list_of_params in info_set.items():
+                    if peak_name and peak_name != self._name:
+                        for parameter in target_parameters:
+                            if parameter in list_of_params:
+                                getattr(self._ui, 'cmb_{}_dep'.format(ui)).addItem(peak_name)
+                                self._dependence_sources[ui][peak_name] = parameter
+
+        self._block_signals(False)
+
+    # ----------------------------------------------------------------------
+    def set_name(self, name):
         self._block_signals(True)
         self._ui.le_name.setText(name)
+        self._name = name
+        self._block_signals(False)
+
+    # ----------------------------------------------------------------------
+    def set_values(self, values):
+        self._block_signals(True)
         for key, item in values.items():
-            for name, ui, _ in self._param_list:
+            for name, ui, _, _ in self._param_list:
                 if name == key:
                     getattr(self._ui, 'dsp_{}'.format(ui)).setValue(item['value'])
                     style, msg = self.STD_STYLE, ""
@@ -394,10 +509,14 @@ class Line_Widget(QtWidgets.QWidget):
                         self._toggle_fittable(False, ui)
 
                     if item['model'] == 'Dependent':
+                        self._dependence_state = True
                         getattr(self._ui, 'chk_{}_dep'.format(ui)).setChecked(True)
                         getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(True)
-                        refresh_combo_box(getattr(self._ui, 'cmb_{}_dep'.format(ui)), item['baseValue'])
+                        self._current_dependence_source = item['baseValue'].split('/')[0]
+                        refresh_combo_box(getattr(self._ui, 'cmb_{}_dep'.format(ui)), self._current_dependence_source)
                     else:
+                        self._dependence_state = False
+                        self._current_dependence_source = []
                         getattr(self._ui, 'chk_{}_dep'.format(ui)).setChecked(False)
                         getattr(self._ui, 'cmb_{}_dep'.format(ui)).setEnabled(False)
 
@@ -420,17 +539,17 @@ class Line_Widget(QtWidgets.QWidget):
         return self._ui.le_name.text()
 
 # ----------------------------------------------------------------------
-class Single_line(Line_Widget):
-    _param_list = (('area', 'area', 'multiplication'),
-                   ('center', 'pos', 'additive'),
-                   ('gauss', 'gaus', 'multiplication'),
-                   ('lorenz', 'lor', 'multiplication'))
+class Single_voigt(Line_Widget):
+    _param_list = (('area', 'area', 'multiplication', ('area', 'areaMain')),
+                   ('center', 'pos', 'additive', ('center', 'centerMain')),
+                   ('gauss', 'gaus', 'multiplication', ('gauss', 'gaussMain')),
+                   ('lorenz', 'lor', 'multiplication', ('lorenz', 'lorenzMain')))
 
     _type = 'voigth'
 
     # ----------------------------------------------------------------------
     def __init__(self, parent, id):
-        super(Single_line, self).__init__(parent, id)
+        super(Single_voigt, self).__init__(parent, id)
 
         self._ui = Ui_single_line()
         self._ui.setupUi(self)
@@ -438,23 +557,63 @@ class Single_line(Line_Widget):
         self._finish_init()
 
 # ----------------------------------------------------------------------
-class Doublet(Line_Widget):
-    _param_list = (('areaMain', 'area_main', 'multiplication'),
-                   ('areaRation', 'area_said', 'multiplication'),
-                   ('centerMain', 'pos_main', 'additive'),
-                   ('separation', 'pos_said', 'additive'),
-                   ('gaussMain', 'gauss_main', 'multiplication'),
-                   ('gaussSecond', 'gauss_said', 'multiplication'),
-                   ('lorenzMain', 'lor_main', 'multiplication'),
-                   ('lorenzSecond', 'lor_said', 'multiplication'))
+class Doublet_voigt(Line_Widget):
+    _param_list = (('areaMain', 'area_main', 'multiplication', ('area', 'areaMain')),
+                   ('areaRation', 'area_said', 'multiplication', ('areaRation', )),
+                   ('centerMain', 'pos_main', 'additive', ('center', 'centerMain')),
+                   ('separation', 'pos_said', 'additive', ('separation', )),
+                   ('gaussMain', 'gauss_main', 'multiplication', ('gauss', 'gaussMain')),
+                   ('gaussSecond', 'gauss_said', 'multiplication', ('gaussSecond', )),
+                   ('lorenzMain', 'lor_main', 'multiplication', ('lorenz', 'lorenzMain')),
+                   ('lorenzSecond', 'lor_said', 'multiplication', ('lorenzSecond', )))
 
     _type = 'voigth_doublet'
 
     # ----------------------------------------------------------------------
     def __init__(self, parent, id):
-        super(Doublet, self).__init__(parent, id)
+        super(Doublet_voigt, self).__init__(parent, id)
 
         self._ui = Ui_doublet()
+        self._ui.setupUi(self)
+
+        self._finish_init()
+
+# ----------------------------------------------------------------------
+class Single_donijak(Line_Widget):
+    _param_list = (('area', 'area', 'multiplication', ('area', 'areaMain')),
+                   ('center', 'pos', 'additive', ('center', 'centerMain')),
+                   ('fwhm', 'fwhm', 'multiplication', ('fwhm', 'fwhmMain')),
+                   ('asymmetry', 'asym', 'multiplication', ('asymmetry', 'asymmetryMain')))
+
+    _type = 'doniach_sunjic'
+
+    # ----------------------------------------------------------------------
+    def __init__(self, parent, id):
+        super(Single_donijak, self).__init__(parent, id)
+
+        self._ui = Ui_single_donijak()
+        self._ui.setupUi(self)
+
+        self._finish_init()
+
+# ----------------------------------------------------------------------
+class Doublet_donijak(Line_Widget):
+    _param_list = (('areaMain', 'area_main', 'multiplication', ('area', 'areaMain')),
+                   ('areaRation', 'area_said', 'multiplication', ('areaRation', )),
+                   ('centerMain', 'pos_main', 'additive', ('center', 'centerMain')),
+                   ('separation', 'pos_said', 'additive', ('separation', )),
+                   ('fwhmMain', 'fwhm_main', 'multiplication', ('fwhm', 'fwhmMain')),
+                   ('fwhmSecond', 'fwhm_said', 'multiplication', ('fwhmSecond', )),
+                   ('asymmetryMain', 'asym_main', 'multiplication', ('asymmetry', 'asymmetryMain')),
+                   ('asymmetrySecond', 'asym_said', 'multiplication', ('asymmetrySecond', )))
+
+    _type = 'doublet_doniach_sunjic'
+
+    # ----------------------------------------------------------------------
+    def __init__(self, parent, id):
+        super(Doublet_donijak, self).__init__(parent, id)
+
+        self._ui = Ui_double_donijak()
         self._ui.setupUi(self)
 
         self._finish_init()

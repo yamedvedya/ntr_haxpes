@@ -26,7 +26,7 @@ class NTR_fitter():
     intensity_solver = None
 
     data_set_for_fitting = {}
-    _original_spectroscopy_data = {}
+    _original_spectroscopy_data = []
 
     _sample_name = None
     _directory = None
@@ -272,7 +272,8 @@ class NTR_fitter():
             setattr(self, key, loaded_data[key])
             # self.solver.reset_fit()
 
-        self.be_shift = np.mean(self._original_spectroscopy_data[:, 2])
+        if self._original_spectroscopy_data != []:
+            self.be_shift = np.mean(self._original_spectroscopy_data[:, 2])
         if 'spectroscopic_data' in self.data_set_for_fitting.keys():
             self._update_source_plots()
 

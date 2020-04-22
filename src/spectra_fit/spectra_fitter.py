@@ -80,7 +80,9 @@ class Spectra_fitter():
         self.spectra_experiment_plot.setData(self.data[spectra_ind]['energy'], self.data[spectra_ind]['intensity'])
         
         if self.bg_params[spectra_ind] or self.peaks_info[spectra_ind]:
-            sum_line, bg = self.sim_spectra(spectra_ind, [])
+            self.make_params(spectra_ind)
+
+            sum_line, bg = self.sim_spectra(spectra_ind, self.fit_params)
 
             self.spectra_bcg_plot.setData(self.data[spectra_ind]['energy'], bg)
             self.spectra_sum_plot.setData(self.data[spectra_ind]['energy'], sum_line)
@@ -89,7 +91,11 @@ class Spectra_fitter():
             for plot in self.spectra_plots:
                 plot.hide()
 
-            for peak in self.peaks_info[spectra_ind]:
+            for peak in copy.deepcopy(self.peaks_info[spectra_ind]):
+                for param_name, param_data in peak['params'].items():
+                    param_data['value'] = self._get_param_value(peak['name'], param_data,
+                                                                param_name, spectra_ind, self.fit_params)
+
                 line = bg + self.models.getModel(peak['peakType'], self.data[spectra_ind]['energy'],
                                                  self.data[spectra_ind]['intensity'], peak['params'])
 
@@ -191,10 +197,9 @@ class Spectra_fitter():
         local_bg = self._get_bck_values(spectra_ind, fit_params)
 
         for peak in copy.deepcopy(self.peaks_info[spectra_ind]):
-            if fit_params:
-                for param_name, param_data in peak['params'].items():
-                    param_data['value'] = self._get_param_value(peak['name'], param_data,
-                                                                param_name, spectra_ind, fit_params)
+            for param_name, param_data in peak['params'].items():
+                param_data['value'] = self._get_param_value(peak['name'], param_data,
+                                                            param_name, spectra_ind, fit_params)
 
             line += self.models.getModel(peak['peakType'], self.data[spectra_ind]['energy'],
                                          self.data[spectra_ind]['intensity'], peak['params'])
@@ -287,28 +292,12 @@ class Spectra_fitter():
                             tokens = param_data['baseValue'].split('/')
                             if len(tokens) == 1:
                                 tokens.append(param_name)
-                            for subPeak in self.peaks_info:
+                            for subPeak in self.peaks_info[index]:
                                 if subPeak['name'] == tokens[0]:
                                     if not subPeak['params'][tokens[1]]['fitable']:
                                         self.baseValues['{}_{}_{}'.format(peak['name'], param_name, index)] = \
                                             subPeak['params'][tokens[1]]['value']
                                         param_data['model'] = 'Dependent_on_fixed'
-
-                elif param_data['model'] in ['Dependent']:
-                    tokens = param_data['baseValue'].split('/')
-                    if len(tokens) == 1:
-                        tokens.append(param_name)
-                    for subPeak in self.peaks_info:
-                        if subPeak['name'] == tokens[0]:
-                            if not subPeak['params'][tokens[1]]['fitable']:
-                                if param_data['linkType'] == 'additive':
-                                    param_data['value'] = subPeak['params'][tokens[1]]['value'] + param_data['value']
-                                elif param_data['linkType'] == 'multiplication':
-                                    param_data['value'] = subPeak['params'][tokens[1]]['value'] * param_data['value']
-                                else:
-                                    raise RuntimeError('Unknown link type')
-
-                                param_data['model'] = 'fixed'
 
     # ----------------------------------------------------------------------
     def fit(self, indexes):
@@ -389,11 +378,10 @@ class Spectra_fitter():
         pass
 
     # ----------------------------------------------------------------------
-    def dump_model(self, file_name, index):
+    def dump_model(self, file_name, bg_params, peaks_info):
 
         with open(file_name, 'wb') as f:
-            pickle.dump({'bg_params': self.bg_params[index], 'peaks_info': self.peaks_info[index],
-                        'functional_peak': self.functional_peak},
+            pickle.dump({'bg_params': bg_params, 'peaks_info': peaks_info, 'functional_peak': self.functional_peak},
                         f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>doublet</class>
- <widget class="QWidget" name="doublet">
+ <class>double_donijak</class>
+ <widget class="QWidget" name="double_donijak">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>574</width>
+    <width>664</width>
     <height>527</height>
    </rect>
   </property>
@@ -231,12 +231,12 @@
       <widget class="QLabel" name="label_34">
        <property name="minimumSize">
         <size>
-         <width>45</width>
+         <width>55</width>
          <height>0</height>
         </size>
        </property>
        <property name="text">
-        <string>Area</string>
+        <string>Area (a.u.)</string>
        </property>
       </widget>
      </item>
@@ -420,7 +420,7 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line_3">
+    <widget class="Line" name="line_5">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -491,7 +491,7 @@
       <widget class="QLabel" name="label_46">
        <property name="minimumSize">
         <size>
-         <width>45</width>
+         <width>55</width>
          <height>0</height>
         </size>
        </property>
@@ -807,7 +807,7 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line_5">
+    <widget class="Line" name="line_6">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -823,7 +823,7 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QCheckBox" name="chk_gauss_main_fit">
+      <widget class="QCheckBox" name="chk_fwhm_main_fit">
        <property name="text">
         <string>Fit</string>
        </property>
@@ -843,7 +843,7 @@
       </widget>
      </item>
      <item row="0" column="3" colspan="2">
-      <widget class="QDoubleSpinBox" name="dsp_gauss_main">
+      <widget class="QDoubleSpinBox" name="dsp_fwhm_main">
        <property name="minimumSize">
         <size>
          <width>75</width>
@@ -865,7 +865,7 @@
       </widget>
      </item>
      <item row="0" column="5">
-      <widget class="QCheckBox" name="chk_gauss_main_dep">
+      <widget class="QCheckBox" name="chk_fwhm_main_dep">
        <property name="text">
         <string>Dependent</string>
        </property>
@@ -875,17 +875,17 @@
       <widget class="QLabel" name="label_49">
        <property name="minimumSize">
         <size>
-         <width>45</width>
+         <width>55</width>
          <height>0</height>
         </size>
        </property>
        <property name="text">
-        <string>Gauss</string>
+        <string>FWHM</string>
        </property>
       </widget>
      </item>
      <item row="3" column="4">
-      <widget class="QRadioButton" name="rb_gauss_said_abolut">
+      <widget class="QRadioButton" name="rb_fwhm_said_abolut">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -893,7 +893,7 @@
         <string>Absolut</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_gauss_said</string>
+        <string notr="true">bg_fwhm_said</string>
        </attribute>
       </widget>
      </item>
@@ -918,7 +918,7 @@
       </widget>
      </item>
      <item row="2" column="3" colspan="2">
-      <widget class="QDoubleSpinBox" name="dsp_gauss_said">
+      <widget class="QDoubleSpinBox" name="dsp_fwhm_said">
        <property name="minimumSize">
         <size>
          <width>75</width>
@@ -940,7 +940,7 @@
       </widget>
      </item>
      <item row="3" column="2">
-      <widget class="QCheckBox" name="chk_gauss_said_fit">
+      <widget class="QCheckBox" name="chk_fwhm_said_fit">
        <property name="text">
         <string>Fit</string>
        </property>
@@ -954,7 +954,7 @@
       </widget>
      </item>
      <item row="3" column="7">
-      <widget class="QDoubleSpinBox" name="dsb_gauss_said_min">
+      <widget class="QDoubleSpinBox" name="dsb_fwhm_said_min">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -992,7 +992,7 @@
       </spacer>
      </item>
      <item row="1" column="5">
-      <widget class="QRadioButton" name="rb_gauss_main_relative">
+      <widget class="QRadioButton" name="rb_fwhm_main_relative">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1000,12 +1000,12 @@
         <string>Relative</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_gauss_main</string>
+        <string notr="true">bg_fwhm_main</string>
        </attribute>
       </widget>
      </item>
      <item row="2" column="5">
-      <widget class="QCheckBox" name="chk_gauss_said_dep">
+      <widget class="QCheckBox" name="chk_fwhm_said_dep">
        <property name="text">
         <string>Dependent</string>
        </property>
@@ -1019,7 +1019,7 @@
       </widget>
      </item>
      <item row="3" column="5">
-      <widget class="QRadioButton" name="rb_gauss_said_relative">
+      <widget class="QRadioButton" name="rb_fwhm_said_relative">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1027,7 +1027,7 @@
         <string>Relative</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_gauss_said</string>
+        <string notr="true">bg_fwhm_said</string>
        </attribute>
       </widget>
      </item>
@@ -1039,7 +1039,7 @@
       </widget>
      </item>
      <item row="1" column="7">
-      <widget class="QDoubleSpinBox" name="dsb_gauss_main_min">
+      <widget class="QDoubleSpinBox" name="dsb_fwhm_main_min">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1064,7 +1064,7 @@
       </widget>
      </item>
      <item row="1" column="9">
-      <widget class="QDoubleSpinBox" name="dsb_gauss_main_max">
+      <widget class="QDoubleSpinBox" name="dsb_fwhm_main_max">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1096,7 +1096,7 @@
       </widget>
      </item>
      <item row="3" column="9">
-      <widget class="QDoubleSpinBox" name="dsb_gauss_said_max">
+      <widget class="QDoubleSpinBox" name="dsb_fwhm_said_max">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1121,7 +1121,7 @@
       </widget>
      </item>
      <item row="1" column="4">
-      <widget class="QRadioButton" name="rb_gauss_main_abolut">
+      <widget class="QRadioButton" name="rb_fwhm_main_abolut">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1129,7 +1129,7 @@
         <string>Absolut</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_gauss_main</string>
+        <string notr="true">bg_fwhm_main</string>
        </attribute>
       </widget>
      </item>
@@ -1160,14 +1160,14 @@
       </widget>
      </item>
      <item row="0" column="6" colspan="4">
-      <widget class="QComboBox" name="cmb_gauss_main_dep">
+      <widget class="QComboBox" name="cmb_fwhm_main_dep">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
      <item row="2" column="6" colspan="4">
-      <widget class="QComboBox" name="cmb_gauss_said_dep">
+      <widget class="QComboBox" name="cmb_fwhm_said_dep">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1176,7 +1176,7 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line_6">
+    <widget class="Line" name="line_3">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -1192,7 +1192,7 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QCheckBox" name="chk_lor_main_fit">
+      <widget class="QCheckBox" name="chk_asym_main_fit">
        <property name="text">
         <string>Fit</string>
        </property>
@@ -1212,7 +1212,7 @@
       </widget>
      </item>
      <item row="0" column="3" colspan="2">
-      <widget class="QDoubleSpinBox" name="dsp_lor_main">
+      <widget class="QDoubleSpinBox" name="dsp_asym_main">
        <property name="minimumSize">
         <size>
          <width>75</width>
@@ -1226,15 +1226,18 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="0" column="5">
-      <widget class="QCheckBox" name="chk_lor_main_dep">
+      <widget class="QCheckBox" name="chk_asym_main_dep">
        <property name="text">
         <string>Dependent</string>
        </property>
@@ -1244,17 +1247,17 @@
       <widget class="QLabel" name="label_52">
        <property name="minimumSize">
         <size>
-         <width>45</width>
+         <width>55</width>
          <height>0</height>
         </size>
        </property>
        <property name="text">
-        <string>Lorentz</string>
+        <string>Asymmetry</string>
        </property>
       </widget>
      </item>
      <item row="3" column="4">
-      <widget class="QRadioButton" name="rb_lor_said_abolut">
+      <widget class="QRadioButton" name="rb_asym_said_abolut">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1262,7 +1265,7 @@
         <string>Absolut</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_lor_said</string>
+        <string notr="true">bg_asym_said</string>
        </attribute>
       </widget>
      </item>
@@ -1287,7 +1290,7 @@
       </widget>
      </item>
      <item row="2" column="3" colspan="2">
-      <widget class="QDoubleSpinBox" name="dsp_lor_said">
+      <widget class="QDoubleSpinBox" name="dsp_asym_said">
        <property name="minimumSize">
         <size>
          <width>75</width>
@@ -1301,15 +1304,18 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="3" column="2">
-      <widget class="QCheckBox" name="chk_lor_said_fit">
+      <widget class="QCheckBox" name="chk_asym_said_fit">
        <property name="text">
         <string>Fit</string>
        </property>
@@ -1323,7 +1329,7 @@
       </widget>
      </item>
      <item row="3" column="7">
-      <widget class="QDoubleSpinBox" name="dsb_lor_said_min">
+      <widget class="QDoubleSpinBox" name="dsb_asym_said_min">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1340,10 +1346,13 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -1361,7 +1370,7 @@
       </spacer>
      </item>
      <item row="1" column="5">
-      <widget class="QRadioButton" name="rb_lor_main_relative">
+      <widget class="QRadioButton" name="rb_asym_main_relative">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1369,12 +1378,12 @@
         <string>Relative</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_lor_main</string>
+        <string notr="true">bg_asym_main</string>
        </attribute>
       </widget>
      </item>
      <item row="2" column="5">
-      <widget class="QCheckBox" name="chk_lor_said_dep">
+      <widget class="QCheckBox" name="chk_asym_said_dep">
        <property name="text">
         <string>Dependent</string>
        </property>
@@ -1388,7 +1397,7 @@
       </widget>
      </item>
      <item row="3" column="5">
-      <widget class="QRadioButton" name="rb_lor_said_relative">
+      <widget class="QRadioButton" name="rb_asym_said_relative">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1396,7 +1405,7 @@
         <string>Relative</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_lor_said</string>
+        <string notr="true">bg_asym_said</string>
        </attribute>
       </widget>
      </item>
@@ -1408,7 +1417,7 @@
       </widget>
      </item>
      <item row="1" column="7">
-      <widget class="QDoubleSpinBox" name="dsb_lor_main_min">
+      <widget class="QDoubleSpinBox" name="dsb_asym_main_min">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1425,15 +1434,18 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="1" column="9">
-      <widget class="QDoubleSpinBox" name="dsb_lor_main_max">
+      <widget class="QDoubleSpinBox" name="dsb_asym_main_max">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1450,10 +1462,13 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -1465,7 +1480,7 @@
       </widget>
      </item>
      <item row="3" column="9">
-      <widget class="QDoubleSpinBox" name="dsb_lor_said_max">
+      <widget class="QDoubleSpinBox" name="dsb_asym_said_max">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1482,15 +1497,18 @@
         </size>
        </property>
        <property name="minimum">
-        <double>0.010000000000000</double>
+        <double>0.000000000000000</double>
        </property>
        <property name="singleStep">
         <double>0.010000000000000</double>
        </property>
+       <property name="value">
+        <double>0.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="1" column="4">
-      <widget class="QRadioButton" name="rb_lor_main_abolut">
+      <widget class="QRadioButton" name="rb_asym_main_abolut">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1498,7 +1516,7 @@
         <string>Absolut</string>
        </property>
        <attribute name="buttonGroup">
-        <string notr="true">bg_lor_main</string>
+        <string notr="true">bg_asym_main</string>
        </attribute>
       </widget>
      </item>
@@ -1529,33 +1547,20 @@
       </widget>
      </item>
      <item row="0" column="6" colspan="4">
-      <widget class="QComboBox" name="cmb_lor_main_dep">
+      <widget class="QComboBox" name="cmb_asym_main_dep">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
      <item row="2" column="6" colspan="4">
-      <widget class="QComboBox" name="cmb_lor_said_dep">
+      <widget class="QComboBox" name="cmb_asym_said_dep">
        <property name="enabled">
         <bool>false</bool>
        </property>
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>2</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="Line" name="line_2">
@@ -1573,18 +1578,31 @@
      </property>
     </widget>
    </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>1</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
   </layout>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="bg_gauss_said"/>
-  <buttongroup name="bg_pos_said"/>
-  <buttongroup name="bg_lor_said"/>
+  <buttongroup name="bg_area_main"/>
   <buttongroup name="bg_area_said"/>
   <buttongroup name="bg_pos_main"/>
-  <buttongroup name="bg_lor_main"/>
-  <buttongroup name="bg_gauss_main"/>
-  <buttongroup name="bg_area_main"/>
+  <buttongroup name="bg_pos_said"/>
+  <buttongroup name="bg_fwhm_main"/>
+  <buttongroup name="bg_fwhm_said"/>
+  <buttongroup name="bg_asym_main"/>
+  <buttongroup name="bg_asym_said"/>
  </buttongroups>
 </ui>

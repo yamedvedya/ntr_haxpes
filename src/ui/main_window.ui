@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1144</width>
+    <width>1197</width>
     <height>693</height>
    </rect>
   </property>
@@ -34,12 +34,35 @@
        <attribute name="title">
         <string>Spectra fit</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_6" columnstretch="0,1">
-        <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,0">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="s_but_load_model">
+              <property name="text">
+               <string>Load model</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Minimum</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="2">
              <widget class="QPushButton" name="s_cmd_add_back">
               <property name="minimumSize">
                <size>
@@ -58,8 +81,8 @@
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QPushButton" name="s_cmd_add_line">
+            <item row="0" column="3">
+             <widget class="QPushButton" name="s_cmd_add_s_voi">
               <property name="minimumSize">
                <size>
                 <width>100</width>
@@ -73,12 +96,12 @@
                </size>
               </property>
               <property name="text">
-               <string>Add line</string>
+               <string>Add voigth line</string>
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QPushButton" name="s_cmd_add_doublet">
+            <item row="0" column="4">
+             <widget class="QPushButton" name="s_cmd_add_d_voi">
               <property name="minimumSize">
                <size>
                 <width>100</width>
@@ -92,41 +115,11 @@
                </size>
               </property>
               <property name="text">
-               <string>Add doublet</string>
+               <string>Add voigth doublet</string>
               </property>
              </widget>
             </item>
-            <item>
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Minimum</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="s_but_load_model">
-              <property name="text">
-               <string>Load model</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="s_but_save_model">
-              <property name="text">
-               <string>Save model</string>
-              </property>
-             </widget>
-            </item>
-            <item>
+            <item row="0" column="5">
              <spacer name="horizontalSpacer_2">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -139,7 +132,7 @@
               </property>
              </spacer>
             </item>
-            <item>
+            <item row="0" column="6">
              <widget class="QPushButton" name="s_pb_set_data">
               <property name="maximumSize">
                <size>
@@ -149,6 +142,51 @@
               </property>
               <property name="text">
                <string>Set data to fitter</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="s_but_save_model">
+              <property name="text">
+               <string>Save model</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="s_cmd_add_s_don">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Add D-S line</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QPushButton" name="s_cmd_add_d_don">
+              <property name="minimumSize">
+               <size>
+                <width>100</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Add D-S doublet</string>
               </property>
              </widget>
             </item>
@@ -195,7 +233,7 @@
                <x>0</x>
                <y>0</y>
                <width>650</width>
-               <height>488</height>
+               <height>459</height>
               </rect>
              </property>
             </widget>
@@ -367,7 +405,7 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="1">
+        <item>
          <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
           <item>
            <widget class="QFrame" name="spectra_plots">
@@ -1034,7 +1072,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1144</width>
+     <width>1197</width>
      <height>21</height>
     </rect>
    </property>

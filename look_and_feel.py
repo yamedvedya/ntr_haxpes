@@ -23,17 +23,15 @@ CURRENT_SOURCE_SHIFT = {'pen': None,
 
 CURRENT_SIM_SHIFT = {'pen': pg.mkPen(color=(255, 85, 0), width=1, style=QtCore.Qt.SolidLine)}
 
-EXPERIMENT_SPECTRA = {'pen': pg.mkPen(color=(0, 0, 0), width=2, style=QtCore.Qt.SolidLine)}
+EXPERIMENT_SPECTRA = {'pen': pg.mkPen(color=(0, 0, 0), width=3, style=QtCore.Qt.SolidLine)}
 
-SUM_SPECTRA = {'pen': pg.mkPen(color=(255, 85, 0), width=2, style=QtCore.Qt.SolidLine)}
+SUM_SPECTRA = {'pen': pg.mkPen(color=(255, 85, 0), width=3, style=QtCore.Qt.SolidLine)}
 
-COMPONENT = {'width': 1, 'style': QtCore.Qt.SolidLine}
+COMPONENT = {'width': 2, 'style': QtCore.Qt.SolidLine}
 
-BACKGROUND = {'pen': pg.mkPen(color=(255, 85, 0), width=1, style=QtCore.Qt.DashLine)}
+BACKGROUND = {'pen': pg.mkPen(color=(255, 85, 0), width=2, style=QtCore.Qt.DashLine)}
 
-PLOT_COLORS = [(255, 170, 0),
-               (170, 0, 0),
-               (85, 170, 127),
+PLOT_COLORS = [(85, 170, 127),
                (0, 170, 0),
                (85, 170, 255),
                (0, 0, 127),
@@ -48,5 +46,7 @@ PLOT_COLORS = [(255, 170, 0),
                (70, 70, 70),
                (170, 85, 255),
                (255, 85, 0),
+               (170, 0, 0),
+               (255, 170, 0),
                (170, 0, 0),
                (0, 85, 0)]
