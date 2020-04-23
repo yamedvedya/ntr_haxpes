@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from src.ntr_data_fitting.gradient_mesh import Gradient_Mesh_Solver
+from src.ntr_data_fitting.visualisation_for_gradient_mesh import Visualisation_For_Gradient_Mesh
 from src.ntr_data_fitting.lmfit_solver import LMFit_Potential_Solver
 from src.ntr_data_fitting.pysot_solver import PySOT_Potential_Solver
 from src.ntr_data_fitting.intensity_fitter import Intensity_Solver
@@ -29,7 +29,7 @@ class NTR_fitter():
     _original_spectroscopy_data = []
 
     _sample_name = None
-    _directory = None
+    directory = None
 
     structure = None
     potential_model = None
@@ -78,30 +78,14 @@ class NTR_fitter():
     # ----------------------------------------------------------------------
     def _set_solver(self):
 
-        self.intensity_solver = Intensity_Solver(self, self._directory, self._sample_name)
+        self.intensity_solver = Intensity_Solver(self, self.directory, self._sample_name)
 
-        if self.settings['FIT_SOLVER'] == 'mesh_gradient':
-            self.potential_solver = Gradient_Mesh_Solver(self)
-        elif self.settings['FIT_SOLVER'] == 'lm_fit':
-            self.potential_solver = LMFit_Potential_Solver(self)
-        elif self.settings['FIT_SOLVER'] == 'pysot':
-            self.potential_solver = PySOT_Potential_Solver(self)
-
-    # ----------------------------------------------------------------------
-    def load_fit_set(self, file_name):
-
-        self._directory = os.path.split(file_name)[0]
-
-        with open(file_name, "rb") as input_file:
-            loaded_data = pickle.load(input_file)
-
-        for key in loaded_data.keys():
-            setattr(self, key, loaded_data[key])
-
-        self._set_solver()
-        self.potential_solver.reset_fit()
-
-        return loaded_data['start_values']
+        # if self.settings['FIT_SOLVER'] == 'mesh_gradient':
+        self.potential_solver = Visualisation_For_Gradient_Mesh(self)
+        # elif self.settings['FIT_SOLVER'] == 'lm_fit':
+        #     self.potential_solver = LMFit_Potential_Solver(self)
+        # elif self.settings['FIT_SOLVER'] == 'pysot':
+        #     self.potential_solver = PySOT_Potential_Solver(self)
 
     # ----------------------------------------------------------------------
     def form_basic_data(self):
@@ -134,11 +118,11 @@ class NTR_fitter():
 
         if file_name is not None:
             self._sample_name = os.path.splitext(os.path.basename(file_name))[0]
-            self._directory = os.path.dirname(file_name)
+            self.directory = os.path.dirname(file_name)
         else:
             self._sample_name = sample_name
-            self._directory = directory
-        self.intensity_solver.set_new_history_file(self._directory, self._sample_name)
+            self.directory = directory
+        self.intensity_solver.set_new_history_file(self.directory, self._sample_name)
         self._original_spectroscopy_data = data
         self.data_set_for_fitting['spectroscopic_data'] = self._original_spectroscopy_data.copy()
 
@@ -152,8 +136,8 @@ class NTR_fitter():
     def set_new_data_file(self, data_file, set):
 
         self._sample_name = os.path.splitext(os.path.basename(data_file))[0]
-        self._directory = os.path.dirname(data_file)
-        self.intensity_solver.set_new_history_file(self._directory, self._sample_name)
+        self.directory = os.path.dirname(data_file)
+        self.intensity_solver.set_new_history_file(self.directory, self._sample_name)
 
         self._original_spectroscopy_data, self.structure, self.angle_shift = get_data_set(data_file, set)
 
@@ -178,7 +162,7 @@ class NTR_fitter():
     # ----------------------------------------------------------------------
     def request_sw_from_server(self):
 
-        self.sw = get_sw_from_server(self.settings, self.structure, self._directory)
+        self.sw = get_sw_from_server(self.settings, self.structure, self.directory)
         self.intensity_solver.add_sw_to_history(self.structure, self.sw)
         if not self.STAND_ALONE_MODE:
             self.gui.update_sw_srb(self.intensity_solver.len_sw_history)
@@ -249,35 +233,30 @@ class NTR_fitter():
                      }, f, pickle.HIGHEST_PROTOCOL)
 
     # ----------------------------------------------------------------------
-    def dump_fit_set(self, file_name, fit_type=None, generate_data_set=True, start_values=None):
+    def dump_fit_set(self, file_name, start_values):
 
-        if generate_data_set:
-            self._prepare_data_set_for_fit()
+        for pair in start_values:
+            pair[0] += self.data_set_for_fitting['fit_depth_points'][0]
 
-        with open(file_name, 'wb') as f:
-            pickle.dump({'_sample_name': self._sample_name, 'sw': self.sw, 'fit_type': fit_type,
-                         'settings': self.settings, 'data_set_for_fitting': self.data_set_for_fitting,
-                         'structure': self.structure, 'potential_model': self.potential_model,
-                         'angle_shift': self.angle_shift, 'be_shift': self.be_shift, 't_val': self.t_val,
-                         'functional_layer': self.functional_layer,
-                         'start_values': start_values}, f, pickle.HIGHEST_PROTOCOL)
+        self._prepare_data_set_for_fit()
+        self.potential_solver.dump_fit_set(file_name, start_values,
+                                           self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
 
     # ----------------------------------------------------------------------
     def restore_session(self, fr, directory):
 
-        self._directory = directory
+        self.directory = directory
 
         loaded_data = pickle.load(fr)
         for key in loaded_data.keys():
             setattr(self, key, loaded_data[key])
-            # self.solver.reset_fit()
 
         if self._original_spectroscopy_data != []:
             self.be_shift = np.mean(self._original_spectroscopy_data[:, 2])
         if 'spectroscopic_data' in self.data_set_for_fitting.keys():
             self._update_source_plots()
 
-        self.intensity_solver.set_new_history_file(self._directory, self._sample_name)
+        self.intensity_solver.set_new_history_file(self.directory, self._sample_name)
 
         if not self.STAND_ALONE_MODE:
             self.gui.update_sw_srb(self.intensity_solver.len_sw_history)
@@ -309,42 +288,6 @@ class NTR_fitter():
             self.sim_profile_intensity()
 
     # ----------------------------------------------------------------------
-    def save_fit_res(self):
-
-        if not "results" in os.listdir(self._directory):
-            os.mkdir(os.path.join(self._directory, "results"))
-
-        file_name = '{}.res'.format(self._fit_name)
-        full_path = os.path.join(os.path.join(self._directory, "results"), file_name)
-
-        if not file_name in os.listdir(os.path.join(self._directory, "results")):
-            self.dump_fit_set(full_path, fit_type='pot')
-
-        with open(full_path, 'ab') as f:
-            pickle.dump(self.potential_solver.get_data_for_save(), f, pickle.HIGHEST_PROTOCOL)
-
-    # ----------------------------------------------------------------------
-    def load_fit_res(self, file_name):
-
-        self._directory = os.path.split(os.path.split(file_name)[0])[0]
-        self.potential_solver.cycle = 0
-        with open(file_name, 'rb') as fr:
-            try:
-                settings_loaded = False
-                while True:
-                    loaded_data = pickle.load(fr)
-                    if not settings_loaded:
-                        for key in loaded_data.keys():
-                            setattr(self, key, loaded_data[key])
-                        self.potential_solver.reset_fit()
-                        settings_loaded = True
-                    else:
-                        self.potential_solver.load_fit_res(loaded_data)
-            except EOFError:
-                pass
-        return 'pot'
-
-    # ----------------------------------------------------------------------
     def _prepare_data_set_for_fit(self):
         self.data_set_for_fitting['fit_spectra_set'] = generate_fit_set(self.data_set_for_fitting['ref_spectra'],
                                                                         self.data_set_for_fitting['fit_depth_points'],
@@ -366,18 +309,29 @@ class NTR_fitter():
             self.potential_solver.prepare_stand_alone_plots()
 
         self._prepare_data_set_for_fit()
-        self._fit_name = self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
 
-        self.potential_solver.do_fit(start_values)
+        try:
+            self.potential_solver.do_fit(start_values, self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S'))
+        except Exception as err:
+            self.fit_in_progress = False
+            raise RuntimeError(err)
+        self.fit_in_progress = False
 
     # ----------------------------------------------------------------------
     def do_intensity_fit(self, fit_variables):
 
         self.fit_in_progress = True
         self._fit_name = self._sample_name + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
-        self.intensity_solver.bfgs_decend(fit_variables)
+        try:
+            self.intensity_solver.bfgs_decend(fit_variables)
+        except Exception as err:
+            self.fit_in_progress = False
+            raise RuntimeError(err)
+        self.fit_in_progress = False
 
     # ----------------------------------------------------------------------
     def stop_fit(self):
 
+        self.potential_solver.abort()
+        self.intensity_solver.abort()
         self.fit_in_progress = False

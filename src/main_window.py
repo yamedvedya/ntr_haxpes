@@ -1,4 +1,3 @@
-import numpy as np
 import random
 import os
 import pyqtgraph as pg
@@ -206,33 +205,19 @@ class NTR_Window(QtWidgets.QMainWindow):
 
         self._block_potential_fit_signals(True)
         new_file = QtWidgets.QFileDialog.getOpenFileNames(self, "Open file", self._working_dir,
-                'HDF5 spectra (*.h5);; Fitter session data set (*.ntr);; Text data set (*.txt);; Fit results (*.res)')
+                'Fitter session data set (*.ntr);; Text data set (*.txt);; Fit results (*.res)') #HDF5 spectra (*.h5);;
 
         if new_file[0]:
 
             self._working_dir = os.path.split(new_file[0][0])[0]
 
             if '.res' in new_file[1]:
-                self._working_file = new_file[0][0]
-                self._ui.l_folder.setText(new_file[0][0])
-                self._ui.tab_mode.setEnabled(True)
-                self._ui.cb_experimental_set.setEnabled(False)
                 self.ntr_fitter.potential_solver.reset_fit()
-                fit_type = self.ntr_fitter.load_fit_res(new_file[0][0])
+                self.ntr_fitter.potential_solver.load_fit_res(new_file[0][0])
                 self._prepare_potential_fit_fit_graphs()
-                if fit_type == 'pot':
-                    self._restore_model(False)
-                    if hasattr(self.ntr_fitter.potential_solver, "best_ksi"):
-                        ksi = self.ntr_fitter.potential_solver.best_ksi[self.ntr_fitter.potential_solver.cycle]
-                    else:
-                        ksi = 0
-                    self.update_potential_fit_cycles(self.ntr_fitter.potential_solver.cycle, ksi,
-                                                         self.ntr_fitter.potential_solver.solution_history[
-                                                             self.ntr_fitter.potential_solver.cycle - 1])
-
-                    self._display_potential_fit_cycle()
-                else:
-                    raise RuntimeError('Not implemented')
+                self._ui.p_srb_cycle.setMaximum(self.ntr_fitter.potential_solver.last_cycle)
+                self._ui.p_srb_cycle.setValue(self.ntr_fitter.potential_solver.last_cycle)
+                self._display_potential_fit_cycle()
 
             elif '.h5' in new_file[1]:
                 self._working_file = os.path.split(self._working_dir)[-1]
@@ -1041,9 +1026,10 @@ class NTR_Window(QtWidgets.QMainWindow):
             for model in self.list_of_models:
                 if model['code'] == self.ntr_fitter.potential_model['code']:
                     if refresh_combo_box(self._ui.p_cb_cmb_model, model['name']):
-                        self._ui.p_sb_deg_freedom.setValue(self.ntr_fitter.potential_model['num_depth_dof']
-                                                           - self.ntr_fitter.potential_model['only_voltage_dof'])
-                        self._potential_model_selected(False)
+                        self._ui.p_sb_deg_freedom.setValue(self.ntr_fitter.potential_model['num_depth_dof'])
+                        self._ui.p_sb_deg_freedom.setEnabled(not self.ntr_fitter.potential_model['fixed_depth_dof'])
+                        self._potential_model_widgets.append(self._get_potential_fit_widget(model['default_widget']))
+                        self._change_degrees(False)
 
         if reset_model:
             try:
@@ -1225,7 +1211,6 @@ class NTR_Window(QtWidgets.QMainWindow):
         if self._potential_worker_state == 'idle':
             self._ui.p_but_pot_fit.setText('Stop')
             self._prepare_potential_fit_fit_graphs()
-            self.ntr_fitter.potential_solver.reset_fit()
 
             self._potential_worker = ExcThread(self._fitter_potential_fit_worker, 'fitter_worker', self.error_queue)
             self._potential_worker.start()
@@ -1270,10 +1255,10 @@ class NTR_Window(QtWidgets.QMainWindow):
                 if isinstance(widget, TopBottomPotential):
                     widget.set_values((solution[1][0], solution[1][-1]))
                 elif isinstance(widget, BreakingPoint):
-                    widget.set_values(((solution[0][counter] - solution[0][0])*1e10* solution[1][counter]))
+                    widget.set_values(((solution[0][counter] - solution[0][0])*1e10, solution[1][counter]))
                     counter = counter + 1
-        except:
-            pass
+        except Exception as err:
+            self.error_queue.put(err)
 
     # ----------------------------------------------------------------------
     def _prepare_potential_fit_set(self):
@@ -1283,4 +1268,4 @@ class NTR_Window(QtWidgets.QMainWindow):
                 file_name = new_file[0]
             else:
                 file_name = "".join(new_file)
-            self.ntr_fitter.dump_fit_set(file_name, generate_data_set=True, start_values=self._get_potential_fit_variable_values())
+            self.ntr_fitter.dump_fit_set(file_name, start_values=self._get_potential_fit_variable_values())

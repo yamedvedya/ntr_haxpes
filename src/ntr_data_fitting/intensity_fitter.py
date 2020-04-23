@@ -16,6 +16,8 @@ class Intensity_Solver():
 
     _var_list = None
 
+    fit_in_progress = False
+
     _C2 = 0.8
 
     # ----------------------------------------------------------------------
@@ -215,8 +217,13 @@ class Intensity_Solver():
         return directions
 
     # ----------------------------------------------------------------------
+    def abort(self):
+        self.fit_in_progress = False
+
+    # ----------------------------------------------------------------------
     def bfgs_decend(self, var_list):
 
+        self.fit_in_progress = True
         self._var_list = var_list
         self._directions = [[] for _ in range(len(var_list))]
         self._var_at_lim = [False for _ in range(len(var_list))]
@@ -235,7 +242,7 @@ class Intensity_Solver():
         msg += ' Start RSS: {:0.3e}'.format(rss_in_point)
         self.parent.gui.add_message_to_fit_history(msg)
 
-        while not solution_found and self.parent.fit_in_progress:
+        while not solution_found and self.fit_in_progress:
             directions = np.zeros(len(var_list))
             for ind, var in enumerate(self._var_list):
                 directions[ind] = -np.sign(diffs[ind])*(max(1, 0.1 // np.abs(diffs[ind])))
